@@ -8,6 +8,8 @@ from datetime import datetime
 from . import *
 from blueprints.favorite import *
 from blueprints.history import *
+from blueprints.beans import *
+from blueprints.penjual import *
 from sqlalchemy import func
 
 bp_pembeli = Blueprint('pembeli', __name__)
@@ -180,7 +182,7 @@ class AddToFavorite(Resource):
 
 class DeleteFavorite(Resource):
     @jwt_required
-        def delete(self):
+    def delete(self):
         parser = reqparse.RequestParser()
         parser.add_argument('cafeId', location='json', type=int, required=True)
         
@@ -263,5 +265,5 @@ api.add_resource(AddToFavorite, "api/favorite/add")
 api.add_resource(DeleteFavorite, "api/favorite/delete")
 
 api.add_resource(AddReview, "api/review/add")
-api.add_resource(AddReview, "api/review/edit")
-api.add_resource(AddReview, "api/review/hapus")
+# api.add_resource(AddReview, "api/review/edit")
+# api.add_resource(AddReview, "api/review/hapus")

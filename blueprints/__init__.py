@@ -39,14 +39,11 @@ db.create_all()
 
 api = Api(app, catch_all_404s=True)
 
-from blueprints.client.resources import bp_client
-app.register_blueprint(bp_client, url_prefix="/")
+from blueprints.penjual.resources import bp_penjual
+app.register_blueprint(bp_penjual, url_prefix="/penjual")
 
-from blueprints.pelapak.resources import bp_pelapak
-app.register_blueprint(bp_pelapak, url_prefix="/pelapak")
-
-from blueprints.admin.resources import bp_admin
-app.register_blueprint(bp_admin, url_prefix="/admin")
+from blueprints.pembeli.resources import bp_pembeli
+app.register_blueprint(bp_pembeli, url_prefix="/pembeli")
 
 from blueprints.auth import bp_auth
 app.register_blueprint(bp_auth, url_prefix="/auth")

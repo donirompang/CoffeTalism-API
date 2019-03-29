@@ -6,7 +6,7 @@ from datetime import datetime
 from flask_jwt_extended import jwt_required, get_jwt_claims
 
 from blueprints.penjual import *
-from blueprints.product import *
+from blueprints.products import *
 from blueprints.beans import *
 
 bp_penjual = Blueprint('penjual', __name__)
@@ -22,12 +22,13 @@ class addProduct(Resource):
 
         args = parser.parse_args()
         penjual = get_jwt_claims()
-        new_bean = Product(None, args['productname'], args['price'], args['photo'], penjual['id'], penjual['name'] )
+ 
+        new_bean = Products(None, args['productname'], args['price'], args['photo'], penjual['id'], penjual['name'] )
         db.session.add(new_bean)
         db.session.commit()
         resp = {}
         resp['status'] = 200
-        resp['bean'] = marshal(new_bean, Product.response_field)
+        resp['bean'] = marshal(new_bean, Products.response_field)
         return resp, 200, { 'Content-Type': 'application/json' }
 
 class editProduct(Resource):
@@ -41,7 +42,7 @@ class editProduct(Resource):
         parser.add_argument('photo', location='json', default=None)
 
         args = parser.parse_args()
-        qry_product = Product.query.filter_by(CoffeeShopId=penjual['id']).filter_by(id=args['idProduct'])
+        qry_product = Products.query.filter_by(coffeeShopId=penjual['id']).filter_by(id=args['idProduct']).first()
 
         if qry_product is None:
             return {'Message': 'product tidak ditemukan'}, 404, {'Content-Type': 'application/json'}
@@ -54,12 +55,12 @@ class editProduct(Resource):
                 qry_product.price =args['price']
 
             if args['photo'] is not None:
-                qry_product.UrlPicture =args['photo']
+                qry_product.urlPicture =args['photo']
             
             db.session.commit()
             resp = {}
             resp['status'] = 200
-            resp['result'] = marshal (qry_product, Product.response_field)
+            resp['result'] = marshal (qry_product, Products.response_field)
             return resp, 200, { 'Content-Type': 'application/json' }
 
 class deleteProduct(Resource):
@@ -67,7 +68,7 @@ class deleteProduct(Resource):
     def delete(self, idProduct):
         penjual = get_jwt_claims()
 
-        qry_product = Product.query.filter_by(CoffeeShopId=penjual['id']).filter_by(id=idProduct)
+        qry_product = Products.query.filter_by(coffeeShopId=penjual['id']).filter_by(id=idProduct)
 
         if qry_product is not None:
             db.session.delete(qry_product)
@@ -79,7 +80,7 @@ class getProduct(Resource):
     @jwt_required
     def get(self):
         penjual_id = get_jwt_claims()['id']
-        qry = Product.query.filter_by(CoffeeShopId = penjual_id)
+        qry = Product.query.filter_by(coffeeShopId = penjual_id)
         listProduct = []
         resp = {}
         resp['status'] = 404
@@ -121,7 +122,7 @@ class editBeans(Resource):
         parser.add_argument('notes', location='json', default=None)
 
         args = parser.parse_args()
-        qry_product = Beans.query.filter_by(CafeShopId=penjual['id']).filter_by(id=args['idProduct'])
+        qry_product = Beans.query.filter_by(cafeShopId=penjual['id']).filter_by(id=args['idProduct'])
 
         if qry_product is None:
             return {'Message': 'beans tidak ditemukan'}, 404, {'Content-Type': 'application/json'}
@@ -150,7 +151,7 @@ class deleteBeans(Resource):
     def delete(self, idProduct):
         penjual = get_jwt_claims()
 
-        qry_product = Beans.query.filter_by(CafeShopId=penjual['id']).filter_by(id=idProduct)
+        qry_product = Beans.query.filter_by(cafeShopId=penjual['id']).filter_by(id=idProduct)
 
         if qry_product is not None:
             db.session.delete(qry_product)
@@ -162,7 +163,7 @@ class getBeans(Resource):
     @jwt_required
     def get(self):
         penjual_id = get_jwt_claims()['id']
-        qry = Beans.query.filter_by(CafeShopId = penjual_id)
+        qry = Beans.query.filter_by(cafeShopId = penjual_id)
         listProduct = []
         resp = {}
         resp['status'] = 404
@@ -179,7 +180,7 @@ class getReview(Resource):
     @jwt_required
     def get(self):
         penjual_id = get_jwt_claims()['id']
-        qry = Review.query.filter_by(CafeShopId = penjual_id)
+        qry = Review.query.filter_by(cafeShopId = penjual_id)
         listReview = []
         resp = {}
         resp['status'] = 404

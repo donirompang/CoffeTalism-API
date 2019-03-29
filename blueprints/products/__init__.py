@@ -10,8 +10,8 @@ class Products(db.Model):
     name = db.Column(db.String(200))
     price = db.Column(db.Integer)
     urlPicture = db.Column(db.String(200), default="https://imgur.com/a/KY126k9")
-    coffeShopId = db.Column(db.Integer)
-    coffeShopName = db.Column(db.String(200))
+    coffeeShopId = db.Column(db.Integer)
+    coffeeShopName = db.Column(db.String(200))
     
 
     response_field = {
@@ -19,17 +19,17 @@ class Products(db.Model):
         "name" : fields.String,
         "price" : fields.Integer,
         "urlPicture" : fields.String,
-        "coffeShopId" : fields.Integer,
-        "coffeShopName" : fields.String
+        "coffeeShopId" : fields.Integer,
+        "coffeeShopName" : fields.String
     }
 
-    def __init__ (self, id, name, price, urlPicture, coffeShopId, coffeShopName):
+    def __init__ (self, id, name, price, urlPicture, coffeeShopId, coffeeShopName):
         self.id = id
         self.name = name
         self.price = price
         self.urlPicture = urlPicture
-        self.coffeShopId = coffeShopId
-        self.coffeShopName = coffeShopName
+        self.coffeeShopId = coffeeShopId
+        self.coffeeShopName = coffeeShopName
 
     def __repr__(self):
         return f'<Products {self.id}>'

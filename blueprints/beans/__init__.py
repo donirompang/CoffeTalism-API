@@ -18,8 +18,8 @@ class Beans(db.Model):
         "id" : fields.Integer,
         "name" : fields.String,
         "cafeShopId" : fields.Integer,
-        "cafeShopName" : fields.String
-        "photoUrl" : fields.String
+        "cafeShopName" : fields.String,
+        "photoUrl" : fields.String,
         "notes" : fields.String
     }
 

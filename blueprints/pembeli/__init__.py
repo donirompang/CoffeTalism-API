@@ -6,11 +6,11 @@ class Pembeli(db.Model):
 
     __tablename__ = "pembeli"
     id = db.Column(db.Integer, primary_key=True, autoincrement=True, unique=True)
-    username = db.Column(db.String(100))
+    username = db.Column(db.String(100), unique=True)
     name = db.Column(db.String(100))
     password = db.Column(db.String(100))
-    email = db.Column(db.String(100))
-    point = db.Column(db.Integer(100))
+    email = db.Column(db.String(100), unique=True)
+    point = db.Column(db.Integer)
     bagde = db.Column(db.String(100))
     profilePicture = db.Column(db.String(100))
 

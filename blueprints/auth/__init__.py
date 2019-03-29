@@ -66,6 +66,18 @@ class RegisterPembeli(Resource):
         resp['status'] = 200
         resp['results'] = "Success register"
 
+        qry = Pembeli.query.filter_by(username = args['username']).first()
+        if qry is not None:
+            resp['results'] = "Username already exist"
+            return resp, 200, { 'Content-Type': 'application/json' }
+
+        qry = Pembeli.query.filter_by(email = args['email']).first()
+        if qry is not None:
+            resp['results'] = "Email already exist"
+            return resp, 200, { 'Content-Type': 'application/json' }
+
+
+
         if(not email):
             resp['results'] = "Email invalid"
             return resp, 200, { 'Content-Type': 'application/json' }
@@ -81,6 +93,10 @@ class RegisterPembeli(Resource):
 
 
         pembeliBaru = Pembeli(None, args['username'], args['name'], args['password'], args['email'], None, None, args['profilePicture'])
+        
+        
+
+        
         db.session.add(pembeliBaru)
         db.session.commit()
 
@@ -132,6 +148,16 @@ class RegisterPenjual(Resource):
         pattern_password = '^(?=.*[0-9]+.*)(?=.*[a-zA-Z]+.*)[0-9a-zA-Z]{6,}$'
         password = cekPattern(pattern_password, args['password'])
 
+        qry = Penjual.query.filter_by(username = args['username']).first()
+        if qry is not None:
+            resp['results'] = "Username already exist"
+            return resp, 200, { 'Content-Type': 'application/json' }
+
+        qry = Penjual.query.filter_by(email = args['email']).first()
+        if qry is not None:
+            resp['results'] = "Email already exist"
+            return resp, 200, { 'Content-Type': 'application/json' }
+
 
         if(not email):
             resp['results'] = "Email invalid"
@@ -150,7 +176,7 @@ class RegisterPenjual(Resource):
             resp['results'] = "Password not match"
             return resp, 200, { 'Content-Type': 'application/json' }
 
-        penjualBaru = Penjual(None, args['username'], args['password'], args['name'], args['email'], None, args['profilePicture'], None)
+        penjualBaru = Penjual(None, args['username'], args['password'], args['name'], args['email'], None, args['photo'], None)
         db.session.add(penjualBaru)
         db.session.commit()
 
