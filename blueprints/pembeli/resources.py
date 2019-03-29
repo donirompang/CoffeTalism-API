@@ -10,6 +10,7 @@ from blueprints.favorite import *
 from blueprints.history import *
 from blueprints.beans import *
 from blueprints.penjual import *
+from blueprints.review import *
 from sqlalchemy import func
 
 bp_pembeli = Blueprint('pembeli', __name__)
@@ -52,7 +53,7 @@ class CariBeans(Resource):
 
         qry = Beans.query.filter(Beans.name.like("%"+args['keyword']+"%")).all()
         for row in qry:
-            cafeId = row.cafeId
+            cafeId = row.cafeShopId
             penjual = Penjual.query.get(cafeId)
             cafe = marshal(penjual, Penjual.response_field)
             list_cafe.append(cafe)            
@@ -95,9 +96,9 @@ class GetHistory(Resource):
         qry = History.query.filter_by(userId = userId).order_by(History.created.desc()).all()
         list_cafe = []
         resp = {}
-        if qry:
+        if qry is not None:
             for row in qry:
-                cafeId = qry.cafeId
+                cafeId = row.cafeId
                 penjual = Penjual.query.get(cafeId)
                 cafe = marshal(penjual,Penjual.response_field)
                 list_cafe.append(cafe)
@@ -142,7 +143,7 @@ class GetFavoriteCafe(Resource):
         resp = {}
         if qry:
             for row in qry:
-                cafeId = qry.cafeId
+                cafeId = row.cafeId
                 penjual = Penjual.query.get(cafeId)
                 cafe = marshal(penjual,Penjual.response_field)
                 list_cafe.append(cafe)
@@ -264,6 +265,6 @@ api.add_resource(GetFavoriteCafe, "/api/favorite/get")
 api.add_resource(AddToFavorite, "/api/favorite/add")
 api.add_resource(DeleteFavorite, "/api/favorite/delete")
 
-api.add_resource(AddReview, "api/review/add")
+api.add_resource(AddReview, "/api/review/add")
 # api.add_resource(AddReview, "api/review/edit")
 # api.add_resource(AddReview, "api/review/hapus")

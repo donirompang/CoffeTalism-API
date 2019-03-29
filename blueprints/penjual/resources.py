@@ -8,6 +8,7 @@ from flask_jwt_extended import jwt_required, get_jwt_claims
 from blueprints.penjual import *
 from blueprints.products import *
 from blueprints.beans import *
+from blueprints.review import *
 
 bp_penjual = Blueprint('penjual', __name__)
 api = Api(bp_penjual)
@@ -68,7 +69,7 @@ class deleteProduct(Resource):
     def delete(self, idProduct):
         penjual = get_jwt_claims()
 
-        qry_product = Products.query.filter_by(coffeeShopId=penjual['id']).filter_by(id=idProduct)
+        qry_product = Products.query.filter_by(coffeeShopId=penjual['id']).filter_by(id=idProduct).first()
 
         if qry_product is not None:
             db.session.delete(qry_product)
@@ -80,14 +81,14 @@ class getProduct(Resource):
     @jwt_required
     def get(self):
         penjual_id = get_jwt_claims()['id']
-        qry = Product.query.filter_by(coffeeShopId = penjual_id)
+        qry = Products.query.filter_by(coffeeShopId = penjual_id).all()
         listProduct = []
         resp = {}
         resp['status'] = 404
         resp['results'] = []
         if qry:
             for row in qry:
-                product = marshal(row, Product.response_field)
+                product = marshal(row, Products.response_field)
                 listProduct.append(product)
             resp['status'] = 200
             resp['results'] = listProduct
@@ -122,17 +123,14 @@ class editBeans(Resource):
         parser.add_argument('notes', location='json', default=None)
 
         args = parser.parse_args()
-        qry_product = Beans.query.filter_by(cafeShopId=penjual['id']).filter_by(id=args['idProduct'])
+        qry_product = Beans.query.filter_by(cafeShopId=penjual['id']).filter_by(id=args['idBeans']).first()
 
         if qry_product is None:
             return {'Message': 'beans tidak ditemukan'}, 404, {'Content-Type': 'application/json'}
 
         else:
-            if args['productname'] is not None:
-                qry_product.name = args['productname']
-
-            if args['price'] is not None:
-                qry_product.price =args['price']
+            if args['coffeename'] is not None:
+                qry_product.name = args['coffeename']
 
             if args['photo'] is not None:
                 qry_product.photoUrl =args['photo']
@@ -151,7 +149,7 @@ class deleteBeans(Resource):
     def delete(self, idProduct):
         penjual = get_jwt_claims()
 
-        qry_product = Beans.query.filter_by(cafeShopId=penjual['id']).filter_by(id=idProduct)
+        qry_product = Beans.query.filter_by(cafeShopId=penjual['id']).filter_by(id=idProduct).first()
 
         if qry_product is not None:
             db.session.delete(qry_product)
@@ -163,7 +161,7 @@ class getBeans(Resource):
     @jwt_required
     def get(self):
         penjual_id = get_jwt_claims()['id']
-        qry = Beans.query.filter_by(cafeShopId = penjual_id)
+        qry = Beans.query.filter_by(cafeShopId = penjual_id).all()
         listProduct = []
         resp = {}
         resp['status'] = 404
@@ -180,7 +178,7 @@ class getReview(Resource):
     @jwt_required
     def get(self):
         penjual_id = get_jwt_claims()['id']
-        qry = Review.query.filter_by(cafeShopId = penjual_id)
+        qry = Review.query.filter_by(cafeShopId = penjual_id).all()
         listReview = []
         resp = {}
         resp['status'] = 404
@@ -201,3 +199,4 @@ api.add_resource(addBeans, "/api/beans/tambah")
 api.add_resource(editBeans, "/api/beans/edit")
 api.add_resource(deleteBeans, "/api/beans/delete/<int:idProduct>")
 api.add_resource(getBeans, "/api/beans/get")
+api.add_resource(getReview, "/api/beans/get/review")
