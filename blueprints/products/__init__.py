@@ -9,7 +9,7 @@ class Products(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True, unique=True)
     name = db.Column(db.String(200))
     price = db.Column(db.Integer)
-    urlPicture = db.Column(db.String(200))
+    urlPicture = db.Column(db.String(200), default="")
     coffeShopId = db.Column(db.Integer)
     coffeShopName = db.Column(db.String(200))
     
