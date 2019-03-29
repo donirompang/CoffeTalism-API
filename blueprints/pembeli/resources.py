@@ -24,7 +24,7 @@ class CariCafe(Resource):
 
         list_cafe = []
 
-        qry = Penjual.query.filter(Penjual.name.like("%"+args['keyword']+"%"))
+        qry = Penjual.query.filter(Penjual.name.like("%"+args['keyword']+"%")).all()
         for row in qry:
             cafe = marshal(row, Penjual.response_field)
             list_cafe.append(cafe)            
@@ -50,7 +50,7 @@ class CariBeans(Resource):
 
         list_cafe = []
 
-        qry = Beans.query.filter(Beans.name.like("%"+args['keyword']+"%"))
+        qry = Beans.query.filter(Beans.name.like("%"+args['keyword']+"%")).all()
         for row in qry:
             cafeId = row.cafeId
             penjual = Penjual.query.get(cafeId)
@@ -252,17 +252,17 @@ class UpdateReview(Resource):
         return {"message" : "Cart Item Not Found"}, 404, { 'Content-Type': 'application/json' }
 
 
-api.add_resource(CariCafe, "api/cari/cafe")
-api.add_resource(CariBeans, "api/cari/beans")
+api.add_resource(CariCafe, "/api/cari/cafe")
+api.add_resource(CariBeans, "/api/cari/beans")
 
-api.add_resource(GetPopularCafe, "api/popularcafe")
+api.add_resource(GetPopularCafe, "/api/popularcafe")
 
-api.add_resource(GetHistory, "api/history/get")
-api.add_resource(AddToHistory, "api/history/add")
+api.add_resource(GetHistory, "/api/history/get")
+api.add_resource(AddToHistory, "/api/history/add")
 
-api.add_resource(GetFavoriteCafe, "api/favorite/get")
-api.add_resource(AddToFavorite, "api/favorite/add")
-api.add_resource(DeleteFavorite, "api/favorite/delete")
+api.add_resource(GetFavoriteCafe, "/api/favorite/get")
+api.add_resource(AddToFavorite, "/api/favorite/add")
+api.add_resource(DeleteFavorite, "/api/favorite/delete")
 
 api.add_resource(AddReview, "api/review/add")
 # api.add_resource(AddReview, "api/review/edit")
