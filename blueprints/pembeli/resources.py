@@ -68,19 +68,33 @@ class CariCafeBeanTerdekat(Resource):
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('keyword', location='json', default=" ")
-        parser.add_argument('latitude', location='json', default="")
-        parser.add_argument('longitude', location='json', default="")
+        parser.add_argument('latitude', location='json', type=float, default=0)
+        parser.add_argument('longitude', location='json', type=float, default=0)
 
         args = parser.parse_args()
 
         list_cafe_terdekat = []
 
+        list_cafe_id = []
 
-        hasil_cari = Beans.query.filter(or_(Beans.name.like('%'+ args['keyword'] +'%'), Beans.cafeShopName.like('%'+ args['keyword'] +'%'))).all()
+        penjual = Penjual.query.filter(Penjual.name.like('%'+ args['keyword'] +'%')).all()
+
+        hasil_cari = Beans.query.filter(Beans.name.like('%'+ args['keyword'] +'%')).all()
 
         for row in hasil_cari:
-            penjual = Penjual.query.get(row.cafeShopId)
-            lokasi = penjual.location.split('#')
+            if row.cafeShopId not in list_cafe_id:
+                list_cafe_id.append(row.cafeShopId)
+
+
+        for row in penjual:
+            if row.id not in list_cafe_id:
+                list_cafe_id.append(row.id)
+
+
+        for row in list_cafe_id:
+            penjual = Penjual.query.get(row)
+            # lokasi = penjual.location.split('#')
+            lokasi = [12.656511, -122.232131]
             lat_penjual = lokasi[0]
             lon_penjual = lokasi[1]
             tmp_dist = get_distance(args['latitude'], args['longitude'], lat_penjual, lon_penjual)
@@ -91,14 +105,15 @@ class CariCafeBeanTerdekat(Resource):
                 if(list_cafe_terdekat[i][1] < list_cafe_terdekat[j][1]):
                     tmp = list_cafe_terdekat[i]
                     list_cafe_terdekat[i] = list_cafe_terdekat[j]
-                    list_cafe_terdekat[j] = tmp          
+                    list_cafe_terdekat[j] = tmp
+
 
         resp = {}
         resp['status'] = 404
         resp['results'] = []
         if len(list_cafe_terdekat) > 0:
             resp['status'] = 200
-            resp['results'] = list_cafe
+            resp['results'] = list_cafe_terdekat
 
         return resp, 200, { 'Content-Type': 'application/json' }
         

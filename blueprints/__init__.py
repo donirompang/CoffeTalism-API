@@ -25,8 +25,8 @@ def add_claims_to_access_token(identity):
 
 
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://doni:doni@172.31.31.238:3306/livecode_api'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:very_strong_password@127.0.0.1:3306/livecode_api'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@127.0.0.1:3306/livecode_api'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:very_strong_password@127.0.0.1:3306/livecode_api'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@127.0.0.1:3306/livecode_api'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
