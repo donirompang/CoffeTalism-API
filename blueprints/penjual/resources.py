@@ -80,14 +80,14 @@ class getProduct(Resource):
     @jwt_required
     def get(self):
         penjual_id = get_jwt_claims()['id']
-        qry = Product.query.filter_by(coffeeShopId = penjual_id)
+        qry = Products.query.filter_by(coffeeShopId = penjual_id)
         listProduct = []
         resp = {}
         resp['status'] = 404
         resp['results'] = []
         if qry:
             for row in qry:
-                product = marshal(row, Product.response_field)
+                product = marshal(row, Products.response_field)
                 listProduct.append(product)
             resp['status'] = 200
             resp['results'] = listProduct
@@ -122,7 +122,7 @@ class editBeans(Resource):
         parser.add_argument('notes', location='json', default=None)
 
         args = parser.parse_args()
-        qry_product = Beans.query.filter_by(cafeShopId=penjual['id']).filter_by(id=args['idProduct'])
+        qry_product = Beans.query.filter_by(cafeShopId=penjual['id']).filter_by(id=args['idProduct']).first()
 
         if qry_product is None:
             return {'Message': 'beans tidak ditemukan'}, 404, {'Content-Type': 'application/json'}
@@ -193,6 +193,38 @@ class getReview(Resource):
             resp['results'] = listReview
         return resp, 200, { 'Content-Type': 'application/json' }
 
+class getProfil(Resource):
+    @jwt_required
+    def get(self):
+        penjual = get_jwt_claims()
+        qry = Penjual.query.get(penjual['id'])
+        print(qry)
+        resp = {}
+        resp['status'] = 404
+        resp['results'] = ""
+        if qry:
+            review = marshal(qry, Penjual.response_field)
+            resp['status'] = 200
+            resp['results'] = review
+        return resp, 200, { 'Content-Type': 'application/json' }
+
+class getReview(Resource):
+    @jwt_required
+    def get(self):
+        penjual_id = get_jwt_claims()['id']
+        qry = Review.query.filter_by(cafeShopId = penjual_id)
+        listReview = []
+        resp = {}
+        resp['status'] = 404
+        resp['results'] = []
+        if qry:
+            for row in qry:
+                review = marshal(row, Review.response_field)
+                listReview.append(review)
+            resp['status'] = 200
+            resp['results'] = listReview
+        return resp, 200, { 'Content-Type': 'application/json' }
+
 api.add_resource(addProduct, "/api/product/tambah")
 api.add_resource(editProduct, "/api/product/edit")
 api.add_resource(deleteProduct, "/api/product/delete/<int:idProduct>")
@@ -201,3 +233,5 @@ api.add_resource(addBeans, "/api/beans/tambah")
 api.add_resource(editBeans, "/api/beans/edit")
 api.add_resource(deleteBeans, "/api/beans/delete/<int:idProduct>")
 api.add_resource(getBeans, "/api/beans/get")
+api.add_resource(getProfil, "/api/profil/get")
+api.add_resource(getReview, "/api/review/get")
