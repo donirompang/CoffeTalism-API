@@ -1,6 +1,8 @@
 import random, logging
 from blueprints import db
 from flask_restful import fields
+from werkzeug.security import generate_password_hash, \
+    check_password_hash
 
 class Penjual(db.Model):
 
@@ -31,7 +33,7 @@ class Penjual(db.Model):
     def __init__ (self, id, username, password, name, email, rating, photo, location, status):
         self.id = id
         self.username = username
-        self.password = password
+        self.password = generate_password_hash(password)
         self.name = name
         self.email = email
         self.rating = rating

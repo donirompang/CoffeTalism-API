@@ -1,6 +1,8 @@
 import random, logging
 from blueprints import db
 from flask_restful import fields
+from werkzeug.security import generate_password_hash, \
+    check_password_hash
 
 class Pembeli(db.Model):
 
@@ -32,7 +34,7 @@ class Pembeli(db.Model):
         self.id = id
         self.username = username
         self.name = name
-        self.password = password
+        self.password = generate_password_hash(password)
         self.email = email
         self.point = point
         self.bagde = bagde

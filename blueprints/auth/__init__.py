@@ -5,7 +5,8 @@ from blueprints import db
 from blueprints.pembeli import Pembeli
 from blueprints.penjual import Penjual
 import re
-
+from werkzeug.security import generate_password_hash, \
+    check_password_hash
 
 from flask_jwt_extended import create_access_token, get_jwt_identity, jwt_required, get_jwt_claims
 
@@ -29,18 +30,21 @@ class LoginPembeli(Resource):
         parser.add_argument('password', location='json', required=True)
         args = parser.parse_args()
 
-        qry = Pembeli.query.filter_by(username=args['username']).filter_by(password=args['password']).first()
-        
+        qry = Pembeli.query.filter_by(username=args['username']).first()        
+
         resp = {}
         resp['status'] = 404
         resp['results'] = {}
-        if qry is not None:
-            token = create_access_token(marshal(qry, Pembeli.response_field))
-            tmp = {}
-            tmp['token'] = token
-            
-            resp['status'] = 200
-            resp['results'] = tmp
+
+        if qry is not None :
+            validasi = check_password_hash(qry.password, args['password'])
+            if validasi:
+                token = create_access_token(marshal(qry, Pembeli.response_field))
+                tmp = {}
+                tmp['token'] = token
+                
+                resp['status'] = 200
+                resp['results'] = tmp
         return resp, 200, { 'Content-Type': 'application/json' }
 
 
@@ -110,18 +114,20 @@ class LoginPenjual(Resource):
         parser.add_argument('password', location='json', required=True)
         args = parser.parse_args()
 
-        qry = Penjual.query.filter_by(username=args['username']).filter_by(password=args['password']).first()
-        
+        qry = Penjual.query.filter_by(username=args['username']).first()        
+
         resp = {}
         resp['status'] = 404
         resp['results'] = {}
-        if qry is not None:
-            token = create_access_token(marshal(qry, Pembeli.response_field))
-            tmp = {}
-            tmp['token'] = token
-            
-            resp['status'] = 200
-            resp['results'] = tmp
+        if qry is not None :
+            validasi = check_password_hash(qry.password, args['password'])
+            if validasi:
+                token = create_access_token(marshal(qry, Penjual.response_field))
+                tmp = {}
+                tmp['token'] = token
+                
+                resp['status'] = 200
+                resp['results'] = tmp
         return resp, 200, { 'Content-Type': 'application/json' }
 
 
