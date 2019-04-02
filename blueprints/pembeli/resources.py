@@ -281,7 +281,7 @@ class GetReview(Resource):
     @jwt_required
     def get(self):
         cafeUserId = get_jwt_claims()['id']
-        qry = Review.query.filter_by(cafeUserId=cafeUserId).filter_by(cafeShopId=1).all()
+        qry = Review.query.filter_by(cafeUserId=cafeUserId).filter_by(deleted="tidak").all()
         list_review = []
 
         if qry is not None:
@@ -302,6 +302,52 @@ class GetReview(Resource):
 
 
 
+class GetProfile(Resource):
+    @jwt_required
+    def get(self):
+        UserId = get_jwt_claims()['id']
+        qry = Pembeli.query.get(UserId)
+
+        if qry is not None:
+            profile = marshal(qry, Pembeli.response_field)        
+
+        resp = {}
+        resp['status'] = 404
+        resp['results'] = profile
+        if len(profile) > 0:
+            resp['status'] = 200
+            resp['results'] = profile
+            return resp, 200, { 'Content-Type': 'application/json' }
+        
+        return resp, 200, { 'Content-Type': 'application/json' }
+
+
+
+class AddPoint(Resource):
+    @jwt_required
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('cafeId', location='json', type=int, required=True)
+
+        args = parser.parse_args()
+ 
+        userId = get_jwt_claims()['id']
+
+        user = Pembeli.query.get(userId)
+        if cafe is not None:
+            user.point = user.point + 10
+        else:
+            return {"message" : "ID Cafe not found"}, 404, { 'Content-Type': 'application/json' }
+        if user.point > 10 :
+            user.bagde = 'Pemula Baru'
+        elif user.point > 50:
+            user.bagde = "Penikmat Cofee"
+        elif user.point > 100:
+            user.bagde = "Legendary"
+        db.session.commit()
+
+        return {"message" : "SUCCESS"}, 200, { 'Content-Type': 'application/json' }
+
 api.add_resource(CariCafe, "/api/cari/cafe")
 api.add_resource(CariBeans, "/api/cari/beans")
 
@@ -318,3 +364,7 @@ api.add_resource(AddReview, "/api/review/add")
 api.add_resource(UpdateReview, "/api/review/edit")
 api.add_resource(DeleteReview, "/api/review/hapus")
 api.add_resource(GetReview, "/api/review/get")
+
+api.add_resource(GetProfile, "/api/profile/get")
+
+api.add_resource(GetPoint, "/api/point/post")
