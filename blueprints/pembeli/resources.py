@@ -11,10 +11,32 @@ from blueprints.history import *
 from blueprints.beans import *
 from blueprints.penjual import *
 from blueprints.review import *
-from sqlalchemy import func
+from blueprints.list_review import *
+from sqlalchemy import func, or_
+
+from math import sin, cos, sqrt, atan2, radians
+
 
 bp_pembeli = Blueprint('pembeli', __name__)
 api = Api(bp_pembeli)
+
+
+def get_distance(lat1, lon1, lat2, lon2):
+    R = 6373.0
+    lat1 = radians(lat1)
+    lon1 = radians(lon1)
+    lat2 = radians(lat2)
+    lon2 = radians(lon2)
+
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+
+    a = sin(dlat / 2)**2 + cos(lat1) * cos(lat2) * sin(dlon / 2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+    distance = R * c * 1000
+    return distance
+
 
 class CariCafe(Resource):
     def post(self):
@@ -41,6 +63,46 @@ class CariCafe(Resource):
         return resp, 200, { 'Content-Type': 'application/json' }
 
 
+
+class CariCafeBeanTerdekat(Resource):
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('keyword', location='json', default=" ")
+        parser.add_argument('latitude', location='json', default="")
+        parser.add_argument('longitude', location='json', default="")
+
+        args = parser.parse_args()
+
+        list_cafe_terdekat = []
+
+
+        hasil_cari = Beans.query.filter(or_(Beans.name.like('%'+ args['keyword'] +'%'), Beans.cafeShopName.like('%'+ args['keyword'] +'%'))).all()
+
+        for row in hasil_cari:
+            penjual = Penjual.query.get(row.cafeShopId)
+            lokasi = penjual.location.split('#')
+            lat_penjual = lokasi[0]
+            lon_penjual = lokasi[1]
+            tmp_dist = get_distance(args['latitude'], args['longitude'], lat_penjual, lon_penjual)
+            list_cafe_terdekat.append([marshal(penjual, Penjual.response_field), tmp_dist])
+
+        for i in range(len(list_cafe_terdekat)):
+            for j in range(len(list_cafe_terdekat)):
+                if(list_cafe_terdekat[i][1] < list_cafe_terdekat[j][1]):
+                    tmp = list_cafe_terdekat[i]
+                    list_cafe_terdekat[i] = list_cafe_terdekat[j]
+                    list_cafe_terdekat[j] = tmp          
+
+        resp = {}
+        resp['status'] = 404
+        resp['results'] = []
+        if len(list_cafe_terdekat) > 0:
+            resp['status'] = 200
+            resp['results'] = list_cafe
+
+        return resp, 200, { 'Content-Type': 'application/json' }
+        
+        
 
 class CariBeans(Resource):
     def post(self):
@@ -86,6 +148,64 @@ class GetPopularCafe(Resource):
         resp['status'] = 404
         resp['results'] = list_cafe
         return resp, 404, { 'Content-Type': 'application/json' }
+
+
+
+class GetUserInfo(Resource):
+    @jwt_required
+    def get(self):
+        userId = get_jwt_claims()['id']
+        qry = Pembeli.query.get(userId)
+        resp = {}
+        if qry:
+            resp['status'] = 200
+            resp['results'] = marshal(qry, Pembeli.response_field)
+            return resp, 200, { 'Content-Type': 'application/json' }
+        resp['status'] = 404
+        resp['results'] = {}
+        return resp, 200, { 'Content-Type': 'application/json' }
+
+
+
+class GetListCafeForReview(Resource):
+    @jwt_required
+    def get(self):
+        userId = get_jwt_claims()['id']
+        qry = ListReview.query.filter_by(userId = userId).filter_by(reviewed = 'tidak').all()
+        list_cafe = []
+        resp = {}
+        resp['status'] = 404
+        resp['results'] = list_cafe
+        if qry:
+            for row in qry:
+                penjual = Penjual.query.get(row.cafeId)
+                cafe = marshal(penjual, Penjual.response_field)
+                list_cafe.append(cafe)
+            resp['status'] = 200
+            resp['results'] = list_cafe
+        return resp, 200, { 'Content-Type': 'application/json' }
+
+   
+
+class GetRecentCafe(Resource):
+    @jwt_required
+    def get(self):
+        userId = get_jwt_claims()['id']
+        qry = History.query.filter_by(userId = userId).order_by(History.id.desc()).limit(6).all()
+        list_cafe = []
+        resp = {}
+        if qry:
+            for row in qry:
+                penjual = Penjual.query.get(row.cafeId)
+                cafe = marshal(penjual, Penjual.response_field)
+                list_cafe.append(cafe)
+            resp['status'] = 200
+            resp['results'] = list_cafe
+            return resp, 200, { 'Content-Type': 'application/json' }
+
+        resp['status'] = 404
+        resp['results'] = list_cafe
+        return resp, 200, { 'Content-Type': 'application/json' }
 
 
 # BAGIAN HISTORY
@@ -200,6 +320,27 @@ class DeleteFavorite(Resource):
 
 
 
+
+class AddToListCafeForReview(Resource):
+    @jwt_required
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('cafeId', location='json', type=int, required=True)
+        
+        args = parser.parse_args()
+         
+        userId = get_jwt_claims()['id']
+
+        cafe_for_review = ListReview(None, userId, args['cafeId'], None)
+
+        db.session.add(cafe_for_review)
+        db.session.commit()
+
+        return {"message" : "SUCCESS"}, 200, { 'Content-Type': 'application/json' }
+
+
+
+
 #BAGIAN ADD Review
 class AddReview(Resource):
     @jwt_required
@@ -215,9 +356,12 @@ class AddReview(Resource):
          
         cafeUserId = get_jwt_claims()['id']
         cafeUserName = get_jwt_claims()['name']
-
+        
         cafe = Penjual.query.get(args['cafeShopId'])
         if cafe is not None:
+            reviewHome = ListReview.query.filter_by(userId = cafeUserId).filter_by(cafeId = args['cafeShopId']).filter_by(reviewed = 'tidak').first()
+            reviewHome.reviewed = 'ya'
+            db.session.commit()
             review = Review(None, args['cafeShopId'], cafe.name, cafeUserId, cafeUserName, args['rating'], args['review'])
         else:
             return {"message" : "ID Cafe not found"}, 404, { 'Content-Type': 'application/json' }
@@ -253,10 +397,15 @@ class UpdateReview(Resource):
         return {"message" : "Cart Item Not Found"}, 404, { 'Content-Type': 'application/json' }
 
 
+
+api.add_resource(GetUserInfo, "/api/userinfo")
+
 api.add_resource(CariCafe, "/api/cari/cafe")
 api.add_resource(CariBeans, "/api/cari/beans")
+api.add_resource(CariCafeBeanTerdekat, "/api/cari/terdekat")
 
 api.add_resource(GetPopularCafe, "/api/popularcafe")
+api.add_resource(GetRecentCafe, "/api/recentcafe")
 
 api.add_resource(GetHistory, "/api/history/get")
 api.add_resource(AddToHistory, "/api/history/add")
@@ -266,5 +415,7 @@ api.add_resource(AddToFavorite, "/api/favorite/add")
 api.add_resource(DeleteFavorite, "/api/favorite/delete")
 
 api.add_resource(AddReview, "/api/review/add")
+api.add_resource(GetListCafeForReview, "/api/review/cafelist")
+api.add_resource(AddToListCafeForReview, "/api/review/addlist")
 # api.add_resource(AddReview, "api/review/edit")
 # api.add_resource(AddReview, "api/review/hapus")
