@@ -92,7 +92,7 @@ class RegisterPembeli(Resource):
             return resp, 200, { 'Content-Type': 'application/json' }
 
 
-        pembeliBaru = Pembeli(None, args['username'], args['name'], args['password'], args['email'], None, None, args['profilePicture'], None)
+        pembeliBaru = Pembeli(None, args['username'], args['name'], args['password'], args['email'], 0, None, args['profilePicture'], None)
         
         
 

@@ -334,13 +334,14 @@ class AddPoint(Resource):
         userId = get_jwt_claims()['id']
 
         user = Pembeli.query.get(userId)
-        if cafe is not None:
+        if user is not None:
             user.point = user.point + 10
         else:
             return {"message" : "ID Cafe not found"}, 404, { 'Content-Type': 'application/json' }
-        if user.point > 10 :
+        
+        if user.point < 50 :
             user.bagde = 'Pemula Baru'
-        elif user.point > 50:
+        elif user.point < 100:
             user.bagde = "Penikmat Cofee"
         elif user.point > 100:
             user.bagde = "Legendary"
@@ -367,4 +368,4 @@ api.add_resource(GetReview, "/api/review/get")
 
 api.add_resource(GetProfile, "/api/profile/get")
 
-api.add_resource(GetPoint, "/api/point/post")
+api.add_resource(AddPoint, "/api/point/post")
