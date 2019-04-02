@@ -94,6 +94,20 @@ class getProduct(Resource):
             resp['results'] = listProduct
         return resp, 200, { 'Content-Type': 'application/json' }
 
+class getProductId(Resource):
+    @jwt_required
+    def get(self, idProduct):
+        penjual_id = get_jwt_claims()['id']
+        qry = Products.query.filter_by(coffeeShopId = penjual_id).filter_by(id=idProduct).first()
+        resp = {}
+        resp['status'] = 404
+        resp['results'] = []
+        if qry:
+            product = marshal(qry, Products.response_field)
+            resp['status'] = 200
+            resp['results'] = product
+        return resp, 200, { 'Content-Type': 'application/json' }
+
 class addBeans(Resource):
     @jwt_required
     def post(self):
@@ -174,6 +188,20 @@ class getBeans(Resource):
             resp['results'] = listProduct
         return resp, 200, { 'Content-Type': 'application/json' }
 
+class getBeansId(Resource):
+    @jwt_required
+    def get(self, idBeans):
+        penjual_id = get_jwt_claims()['id']
+        qry = Beans.query.filter_by(cafeShopId = penjual_id).filter_by(id = idBeans).first()
+        resp = {}
+        resp['status'] = 404
+        resp['results'] = []
+        if qry:
+            bean = marshal(qry, Beans.response_field)
+            resp['status'] = 200
+            resp['results'] = bean
+        return resp, 200, { 'Content-Type': 'application/json' }
+
 class getReview(Resource):
     @jwt_required
     def get(self):
@@ -195,8 +223,10 @@ api.add_resource(addProduct, "/api/product/tambah")
 api.add_resource(editProduct, "/api/product/edit")
 api.add_resource(deleteProduct, "/api/product/delete/<int:idProduct>")
 api.add_resource(getProduct, "/api/product/get")
+api.add_resource(getProductId, "/api/product/get/<int:idProduct>")
 api.add_resource(addBeans, "/api/beans/tambah")
 api.add_resource(editBeans, "/api/beans/edit")
 api.add_resource(deleteBeans, "/api/beans/delete/<int:idProduct>")
 api.add_resource(getBeans, "/api/beans/get")
+api.add_resource(getBeansId, "/api/beans/get/<int:idBeans>")
 api.add_resource(getReview, "/api/beans/get/review")
