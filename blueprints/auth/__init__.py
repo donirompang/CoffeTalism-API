@@ -92,7 +92,7 @@ class RegisterPembeli(Resource):
             return resp, 200, { 'Content-Type': 'application/json' }
 
 
-        pembeliBaru = Pembeli(None, args['username'], args['name'], args['password'], args['email'], 0, None, args['profilePicture'], None)
+        pembeliBaru = Pembeli(None, args['username'], args['name'], args['password'], args['email'], 0, None, args['profilePicture'], None, None)
         
         
 
@@ -135,6 +135,7 @@ class RegisterPenjual(Resource):
         parser.add_argument('k_password', location='json', required=True)
         parser.add_argument('email', location='json', required=True)
         parser.add_argument('photo', location='json', required=True)
+        parser.add_argument('alamat', location='json', required=True)
 
         args = parser.parse_args()
 
@@ -176,7 +177,7 @@ class RegisterPenjual(Resource):
             resp['results'] = "Password not match"
             return resp, 200, { 'Content-Type': 'application/json' }
 
-        penjualBaru = Penjual(None, args['username'], args['password'], args['name'], args['email'], None, args['photo'], None, None)
+        penjualBaru = Penjual(None, args['username'], args['password'], args['name'], args['email'], None, args['photo'], None, args['alamat'], None)
         db.session.add(penjualBaru)
         db.session.commit()
 
