@@ -8,6 +8,7 @@ from flask_jwt_extended import jwt_required, get_jwt_claims
 from blueprints.penjual import *
 from blueprints.products import *
 from blueprints.beans import *
+from blueprints.review import *
 
 bp_penjual = Blueprint('penjual', __name__)
 api = Api(bp_penjual)
