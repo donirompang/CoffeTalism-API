@@ -11,7 +11,7 @@ from blueprints.history import *
 from blueprints.beans import *
 from blueprints.penjual import *
 from blueprints.review import *
-
+from blueprints.products import *
 
 
 from blueprints.list_review import *
@@ -512,33 +512,17 @@ class AddPoint(Resource):
             return {"message" : "ID Cafe not found"}, 404, { 'Content-Type': 'application/json' }
         
         if user.point < 50 :
-            user.bagde = 'Pemula Baru'
-        elif user.point < 100:
-            user.bagde = "Penikmat Cofee"
-        elif user.point > 100:
-            user.bagde = "Legendary"
+            user.bagde = 'Coffee Newbie'
+        elif user.point < 150:
+            user.bagde = "Coffee Enthusiast"
+        elif user.point >= 150:
+            user.bagde = "Coffee Addict"
         db.session.commit()
 
         return {"message" : "SUCCESS"}, 200, { 'Content-Type': 'application/json' }
 
 
-api.add_resource(GetUserInfo, "/api/userinfo")
-      
-api.add_resource(CariCafe, "/api/cari/cafe")
-api.add_resource(CariBeans, "/api/cari/beans")
-api.add_resource(CariCafeBeanTerdekat, "/api/cari/terdekat")
 
-api.add_resource(GetPopularCafe, "/api/popularcafe")
-api.add_resource(GetRecentCafe, "/api/recentcafe")
-
-api.add_resource(GetHistory, "/api/history/get")
-api.add_resource(AddToHistory, "/api/history/add")
-
-api.add_resource(GetFavoriteCafe, "/api/favorite/get")
-api.add_resource(AddToFavorite, "/api/favorite/add")
-api.add_resource(DeleteFavorite, "/api/favorite/delete")
-
-api.add_resource(AddReview, "/api/review/add")
 
 
 class ToggleFavorite(Resource):
@@ -584,23 +568,64 @@ class GetFavoriteCafeDetail(Resource):
         resp['results'] = "Not_found"
         return resp, 404, { 'Content-Type': 'application/json' }
 
+
+class GetDetailCafe(Resource):
+    def get(self, cafeId):
+        qry = Penjual.query.filter_by(id = cafeId).first()
+        qryBeans = Beans.query.filter_by(cafeShopId = cafeId).all()
+        qryProduct = Products.query.filter_by(coffeeShopId = cafeId).all()
+        qryReview = Review.query.filter_by(cafeShopId = cafeId).all()
+        list_beans = []
+        list_product = []
+        list_review = []
+        cafe = marshal(qry, Penjual.response_field)
+        resp = {}
+        if qryBeans:
+            for row in qryBeans:
+                beans = marshal(row, Beans.response_field)
+                list_beans.append(beans)
+        if qryProduct:
+            for row in qryProduct:
+                products = marshal(row, Products.response_field) 
+                list_product.append(products)
+        if qryReview:
+            for row in qryReview:
+                reviews = marshal(row, Review.response_field)
+                list_review.append(reviews)
+        resp['status'] = 200
+        resp['results'] = {}
+        resp['results']['cafe'] = cafe
+        resp['results']['beans'] = list_beans
+        resp['results']['product'] = list_product
+        resp['results']['review'] = list_review
+        return resp, 200, { 'Content-Type': 'application/json' }
+
+
+
+api.add_resource(GetDetailCafe, "/api/detail/get/<int:cafeId>")
+
+api.add_resource(GetUserInfo, "/api/userinfo")
+      
 api.add_resource(CariCafe, "/api/cari/cafe")
 api.add_resource(CariBeans, "/api/cari/beans")
+api.add_resource(CariCafeBeanTerdekat, "/api/cari/terdekat")
 
 api.add_resource(GetPopularCafe, "/api/popularcafe")
+api.add_resource(GetRecentCafe, "/api/recentcafe")
 
 api.add_resource(GetHistory, "/api/history/get")
 api.add_resource(AddToHistory, "/api/history/add")
 
 api.add_resource(GetFavoriteCafe, "/api/favorite/get")
-api.add_resource(GetFavoriteCafeDetail, "/api/favorite/get/<int:cafeId>")
-api.add_resource(ToggleFavorite, "/api/favorite/toggle/<int:cafeId>")
 api.add_resource(AddToFavorite, "/api/favorite/add")
 api.add_resource(DeleteFavorite, "/api/favorite/delete")
 
 api.add_resource(AddReview, "/api/review/add")
-# api.add_resource(AddReview, "api/review/edit")
-# api.add_resource(AddReview, "api/review/hapus")
+
+
+api.add_resource(GetFavoriteCafeDetail, "/api/favorite/get/<int:cafeId>")
+api.add_resource(ToggleFavorite, "/api/favorite/toggle/<int:cafeId>")
+
 
 api.add_resource(GetListCafeForReview, "/api/review/cafelist")
 api.add_resource(AddToListCafeForReview, "/api/review/addlist")
