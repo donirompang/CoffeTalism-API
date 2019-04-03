@@ -13,6 +13,7 @@ class Penjual(db.Model):
     rating = db.Column(db.Integer)
     photo = db.Column(db.String(100))
     location = db.Column(db.String(255))
+    status = db.Column(db.String(100), default="penjual")
 
 
     response_field = {
@@ -23,10 +24,11 @@ class Penjual(db.Model):
         "email" : fields.String,
         "rating" : fields.Integer,
         "photo" : fields.String,
-        "location" : fields.String
+        "location" : fields.String,
+        "status" : fields.String
     }
 
-    def __init__ (self, id, username, password, name, email, rating, photo, location):
+    def __init__ (self, id, username, password, name, email, rating, photo, location, status):
         self.id = id
         self.username = username
         self.password = password
@@ -35,6 +37,7 @@ class Penjual(db.Model):
         self.rating = rating
         self.photo = photo
         self.location = location
+        self.status = status
 
     def __repr__(self):
         return f'<Penjual {self.id}>'
