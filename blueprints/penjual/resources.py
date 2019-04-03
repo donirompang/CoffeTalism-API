@@ -137,7 +137,9 @@ class editBeans(Resource):
         parser.add_argument('notes', location='json', default=None)
 
         args = parser.parse_args()
+
         qry_product = Beans.query.filter_by(cafeShopId=penjual['id']).filter_by(id=args['idBeans']).first()
+
 
         if qry_product is None:
             return {'Message': 'beans tidak ditemukan'}, 404, {'Content-Type': 'application/json'}
@@ -219,6 +221,23 @@ class getReview(Resource):
             resp['results'] = listReview
         return resp, 200, { 'Content-Type': 'application/json' }
 
+class getProfil(Resource):
+    @jwt_required
+    def get(self):
+        penjual = get_jwt_claims()
+        qry = Penjual.query.get(penjual['id'])
+        print(qry)
+        resp = {}
+        resp['status'] = 404
+        resp['results'] = ""
+        if qry:
+            review = marshal(qry, Penjual.response_field)
+            resp['status'] = 200
+            resp['results'] = review
+        return resp, 200, { 'Content-Type': 'application/json' }
+
+
+
 api.add_resource(addProduct, "/api/product/tambah")
 api.add_resource(editProduct, "/api/product/edit")
 api.add_resource(deleteProduct, "/api/product/delete/<int:idProduct>")
@@ -228,5 +247,9 @@ api.add_resource(addBeans, "/api/beans/tambah")
 api.add_resource(editBeans, "/api/beans/edit")
 api.add_resource(deleteBeans, "/api/beans/delete/<int:idProduct>")
 api.add_resource(getBeans, "/api/beans/get")
+
+api.add_resource(getProfil, "/api/profil/get")
+api.add_resource(getReview, "/api/review/get")
+
 api.add_resource(getBeansId, "/api/beans/get/<int:idBeans>")
-api.add_resource(getReview, "/api/beans/get/review")
+
