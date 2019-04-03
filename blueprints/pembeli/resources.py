@@ -11,10 +11,14 @@ from blueprints.history import *
 from blueprints.beans import *
 from blueprints.penjual import *
 from blueprints.review import *
+
+
+
 from blueprints.list_review import *
 from sqlalchemy import func, or_
 
 from math import sin, cos, sqrt, atan2, radians
+
 
 
 bp_pembeli = Blueprint('pembeli', __name__)
@@ -536,6 +540,68 @@ api.add_resource(DeleteFavorite, "/api/favorite/delete")
 
 api.add_resource(AddReview, "/api/review/add")
 
+
+class ToggleFavorite(Resource):
+    @jwt_required
+    def get(self, cafeId):
+        userId = get_jwt_claims()['id']
+        qry = Favorite.query.filter_by(userId = userId).filter_by(cafeId=cafeId).first()
+        resp = {}
+        if qry:
+            if qry.deleted == 'tidak' :
+                qry.deleted = 'ya'
+            else:
+                qry.deleted = 'tidak'
+                
+            db.session.commit()
+            cafe = marshal(qry, Favorite.response_field)
+            resp['status'] = 200
+            resp['results'] = cafe
+            return resp, 200, { 'Content-Type': 'application/json' }
+        resp['status'] = 404
+        resp['results'] = "Not_found"
+        return resp, 404, { 'Content-Type': 'application/json' }
+
+
+class GetFavoriteCafeDetail(Resource):
+    @jwt_required
+    def get(self, cafeId):
+        userId = get_jwt_claims()['id']
+        qry = Favorite.query.filter_by(userId = userId).filter_by(cafeId=cafeId).first()
+        resp = {}
+        if qry:
+            if qry.deleted == 'ya':
+                cafe = marshal(qry, Favorite.response_field)
+                resp['status'] = 404
+                resp['results'] = cafe
+                return resp, 200, { 'Content-Type': 'application/json' }
+            else :
+                cafe = marshal(qry, Favorite.response_field)
+                resp['status'] = 200
+                resp['results'] = cafe
+                return resp, 200, { 'Content-Type': 'application/json' }
+        resp['status'] = 404
+        resp['results'] = "Not_found"
+        return resp, 404, { 'Content-Type': 'application/json' }
+
+api.add_resource(CariCafe, "/api/cari/cafe")
+api.add_resource(CariBeans, "/api/cari/beans")
+
+api.add_resource(GetPopularCafe, "/api/popularcafe")
+
+api.add_resource(GetHistory, "/api/history/get")
+api.add_resource(AddToHistory, "/api/history/add")
+
+api.add_resource(GetFavoriteCafe, "/api/favorite/get")
+api.add_resource(GetFavoriteCafeDetail, "/api/favorite/get/<int:cafeId>")
+api.add_resource(ToggleFavorite, "/api/favorite/toggle/<int:cafeId>")
+api.add_resource(AddToFavorite, "/api/favorite/add")
+api.add_resource(DeleteFavorite, "/api/favorite/delete")
+
+api.add_resource(AddReview, "/api/review/add")
+# api.add_resource(AddReview, "api/review/edit")
+# api.add_resource(AddReview, "api/review/hapus")
+
 api.add_resource(GetListCafeForReview, "/api/review/cafelist")
 api.add_resource(AddToListCafeForReview, "/api/review/addlist")
 
@@ -547,4 +613,5 @@ api.add_resource(GetReview, "/api/review/get")
 api.add_resource(GetProfile, "/api/profile/get")
 
 api.add_resource(AddPoint, "/api/point/post")
+
 

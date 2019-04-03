@@ -52,7 +52,7 @@ class RegisterPembeli(Resource):
         parser.add_argument('password', location='json', required=True)
         parser.add_argument('k_password', location='json', required=True)
         parser.add_argument('email', location='json', required=True)
-        parser.add_argument('profilePicture', location='json', required=True)
+        parser.add_argument('profilePicture', location='json')
 
         args = parser.parse_args()
 
@@ -134,8 +134,12 @@ class RegisterPenjual(Resource):
         parser.add_argument('password', location='json', required=True)
         parser.add_argument('k_password', location='json', required=True)
         parser.add_argument('email', location='json', required=True)
+<<<<<<< HEAD
         parser.add_argument('photo', location='json', required=True)
         parser.add_argument('alamat', location='json', required=True)
+=======
+        parser.add_argument('photo', location='json')
+>>>>>>> 2bc4e7988f10a1f220a3b2ca6e6db668dacf58e8
 
         args = parser.parse_args()
 
