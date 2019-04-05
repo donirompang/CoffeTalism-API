@@ -9,6 +9,8 @@ from blueprints.penjual import *
 from blueprints.products import *
 from blueprints.beans import *
 from blueprints.review import *
+from blueprints.detailtransaksi import *
+from blueprints.favorite import *
 
 bp_penjual = Blueprint('penjual', __name__)
 api = Api(bp_penjual)
@@ -221,6 +223,7 @@ class getReview(Resource):
             resp['results'] = listReview
         return resp, 200, { 'Content-Type': 'application/json' }
 
+
 class getProfil(Resource):
     @jwt_required
     def get(self):
@@ -264,6 +267,47 @@ class EditProfilePenjual(Resource):
             return resp, 200, { 'Content-Type': 'application/json' }
 
 
+class AddDetailTransaksi(Resource):
+    @jwt_required
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('beanId', location='json', type=int, required=True)
+        parser.add_argument('totalTransaksi', location='json', type=int, required=True)
+
+        args = parser.parse_args()
+ 
+        shopId = get_jwt_claims()['id']
+
+        tx = DetailTransaksi(None, None, args['beanId'], args['totalTransaksi'], None)
+        
+        db.session.add(tx)
+        db.session.commit()
+        
+        resp = {}
+        resp['status'] = 200
+        resp['results'] = marshal(tx, DetailTransaksi.response_field)
+
+        return resp, 200, { 'Content-Type': 'application/json' }
+
+
+class GetAllPushToken(Resource):
+    @jwt_required
+    def get(self):
+        penjualId = get_jwt_claims()['id']
+        qry = Favorite.query.filter_by(cafeId = penjualId).filter_by(deleted = 'tidak').all()
+        list_token = []
+        resp = {}
+        resp['status'] = 404
+        resp['results'] = list_token
+        if qry is not None:
+            for row in qry:
+                pembeli = Pembeli.query.get(row.userId)
+                list_token.append(pembeli.pushToken)
+            resp['status'] = 200
+        
+        return resp, 200, { 'Content-Type': 'application/json' }
+
+
 
 api.add_resource(EditProfilePenjual, "/api/profile/edit")
 api.add_resource(addProduct, "/api/product/tambah")
@@ -280,4 +324,9 @@ api.add_resource(getProfil, "/api/profil/get")
 api.add_resource(getReview, "/api/review/get")
 
 api.add_resource(getBeansId, "/api/beans/get/<int:idBeans>")
+
+
+api.add_resource(AddDetailTransaksi, "/api/transaksi/add")
+
+api.add_resource(GetAllPushToken, "/api/pushtoken/all")
 

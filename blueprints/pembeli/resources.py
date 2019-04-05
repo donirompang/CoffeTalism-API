@@ -12,6 +12,8 @@ from blueprints.beans import *
 from blueprints.penjual import *
 from blueprints.review import *
 from blueprints.products import *
+from blueprints.detailtransaksi import *
+
 
 from blueprints.list_review import *
 from sqlalchemy import func, or_
@@ -403,7 +405,7 @@ class AddReview(Resource):
 
 
         else:
-            return {"message" : "ID Cafe not found"}, 404, { 'Content-Type': 'application/json' }
+            return {"message" : "ID Cafe not found"}, 200, { 'Content-Type': 'application/json' }
 
         db.session.add(review)
         db.session.commit()
@@ -502,55 +504,138 @@ class GetProfile(Resource):
         return resp, 200, { 'Content-Type': 'application/json' }
 
 
-
 class AddPoint(Resource):
     @jwt_required
     def post(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('cafeId', location='json', type=int, required=True)
+        parser.add_argument('transaksiId', location='json', type=int, required=True)
 
         args = parser.parse_args()
  
         userId = get_jwt_claims()['id']
 
-        user = Pembeli.query.get(userId)
-        if user is not None:
-            user.point = user.point + 10
-        else:
-            return {"message" : "ID Cafe not found"}, 404, { 'Content-Type': 'application/json' }
+        tx = DetailTransaksi.query.get(args['transaksiId'])
+        resp = {}
+        resp['status'] = 404
+        if tx is not None:
+            if tx.scanned == 'ya':
+                return resp, 200, { 'Content-Type': 'application/json' }
+            tx.userId = userId
+            tx.scanned = 'ya'
+            db.session.commit()
+
+            user = Pembeli.query.get(userId)
+            user.point = user.point + tx.totalTransaksi / 10000
+
+            if user.point < 50 :
+                user.bagde = 'Coffee Newbie'
+            elif user.point < 150:
+                user.bagde = "Coffee Enthusiast"
+            elif user.point >= 150:
+                user.bagde = "Coffee Addict"
+
+            db.session.commit()
+
+            beans = Beans.query.get(tx.beanId)
+            cafeId = beans.cafeShopId
+
+            cafe_for_review = ListReview(None, userId, cafeId, None)
+
+            db.session.add(cafe_for_review)
+            db.session.commit()
+            resp['status'] = 200
+            return resp, 200, { 'Content-Type': 'application/json' }
+
+        return resp, 200, { 'Content-Type': 'application/json' }
         
-        if user.point < 50 :
-            user.bagde = 'Pemula Baru'
-        elif user.point < 100:
-            user.bagde = "Penikmat Cofee"
-        elif user.point > 100:
-            user.bagde = "Legendary"
-        db.session.commit()
-
-        return {"message" : "SUCCESS"}, 200, { 'Content-Type': 'application/json' }
-
-# class AddToFavorite(Resource):
-#     @jwt_required
-#     def post(self):
-#         parser = reqparse.RequestParser()
-#         parser.add_argument('cafeId', location='json', type=int, required=True)
-        
-#         args = parser.parse_args()
-
-         
-#         userId = get_jwt_claims()['id']
+       
 
 
-#         cafe = Penjual.query.get(args['cafeId'])
-#         if cafe is not None:
-#             favorite = Favorite(None, userId, args['cafeId'], cafe.name, None)
-#         else:
-#             return {"message" : "ID cafe not found"}, 404, { 'Content-Type': 'application/json' }
-
-#         db.session.add(favorite)
-#         db.session.commit()
 
 #         return {"message" : "SUCCESS"}, 200, { 'Content-Type': 'application/json' }
+
+class GetDetailCafe(Resource):
+    def get(self, cafeId):
+        qry = Penjual.query.filter_by(id = cafeId).first()
+        qryBeans = Beans.query.filter_by(cafeShopId = cafeId).all()
+        qryProduct = Products.query.filter_by(coffeeShopId = cafeId).all()
+        qryReview = Review.query.filter_by(cafeShopId = cafeId).all()
+        list_beans = []
+        list_product = []
+        list_review = []
+        cafe = marshal(qry, Penjual.response_field)
+        resp = {}
+
+        if qryBeans:
+            for row in qryBeans:
+                beans = marshal(row, Beans.response_field)
+                list_beans.append(beans)
+        if qryProduct:
+            for row in qryProduct:
+                products = marshal(row, Products.response_field) 
+                list_product.append(products)
+        if qryReview:
+            for row in qryReview:
+                reviews = marshal(row, Review.response_field)
+                list_review.append(reviews)
+        resp['status'] = 200
+        resp['results'] = {}
+        resp['results']['cafe'] = cafe
+        resp['results']['beans'] = list_beans
+        resp['results']['product'] = list_product
+        resp['results']['review'] = list_review
+        return resp, 200, { 'Content-Type': 'application/json' }
+
+      
+class EditProfileUser(Resource):
+    @jwt_required
+    def put(self):
+        pembeli = get_jwt_claims()
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', location='json', default=None)
+        parser.add_argument('photo', location='json', default=None)
+
+        args = parser.parse_args()
+        qry_user = Pembeli.query.filter_by(id=pembeli['id']).first()
+
+        if qry_user is None:
+            return {'Message': 'user belum terdaftar'}, 404, {'Content-Type': 'application/json'}
+
+        else:
+            if args['name'] is not None:
+                qry_user.name =args['name']
+
+            if args['photo'] is not None:
+                qry_user.profilePicture =args['photo']
+
+            db.session.commit()
+            resp = {}
+            resp['status'] = 200
+            resp['result'] = marshal (qry_user, Pembeli.response_field)
+            return resp, 200, { 'Content-Type': 'application/json' }
+
+
+class GetFavoriteCafeDetail(Resource):
+    @jwt_required
+    def get(self, cafeId):
+        userId = get_jwt_claims()['id']
+        qry = Favorite.query.filter_by(userId = userId).filter_by(cafeId=cafeId).first()
+        resp = {}
+        if qry:
+            if qry.deleted == 'ya':
+                cafe = marshal(qry, Favorite.response_field)
+                resp['status'] = 404
+                resp['results'] = cafe
+                return resp, 200, { 'Content-Type': 'application/json' }
+            else :
+                cafe = marshal(qry, Favorite.response_field)
+                resp['status'] = 200
+                resp['results'] = cafe
+                return resp, 200, { 'Content-Type': 'application/json' }
+        resp['status'] = 404
+        resp['results'] = "Not_found"
+        return resp, 200, { 'Content-Type': 'application/json' }
+
 
 class GetDetailCafe(Resource):
     def get(self, cafeId):
@@ -583,53 +668,58 @@ class GetDetailCafe(Resource):
         resp['results']['review'] = list_review
         return resp, 200, { 'Content-Type': 'application/json' }
 
-class EditProfileUser(Resource):
+
+
+class UpdatePushToken(Resource):
     @jwt_required
     def put(self):
-        pembeli = get_jwt_claims()
         parser = reqparse.RequestParser()
-        parser.add_argument('name', location='json', default=None)
-        parser.add_argument('photo', location='json', default=None)
+        parser.add_argument('token', location='json', required=True)
 
         args = parser.parse_args()
-        qry_user = Pembeli.query.filter_by(id=pembeli['id']).first()
-
-        if qry_user is None:
-            return {'Message': 'user belum terdaftar'}, 404, {'Content-Type': 'application/json'}
-
-        else:
-            if args['name'] is not None:
-                qry_user.name =args['name']
-
-            if args['photo'] is not None:
-                qry_user.profilePicture =args['photo']
-            
+        userId = get_jwt_claims()['id']
+        user = Pembeli.query.get(userId)
+        resp = {}
+        resp['status'] = 404
+        if user is not None:
+            user.pushToken = args['token']
             db.session.commit()
-            resp = {}
             resp['status'] = 200
-            resp['result'] = marshal (qry_user, Pembeli.response_field)
-            return resp, 200, { 'Content-Type': 'application/json' }
+            resp['results'] = marshal(user, Pembeli.response_field)
+
+        return resp, 200, {'Content-Type': 'application/json'}
 
 
+api.add_resource(GetDetailCafe, "/api/detail/get/<int:cafeId>")
 
+api.add_resource(GetUserInfo, "/api/userinfo")
+      
 api.add_resource(CariCafe, "/api/cari/cafe")
 api.add_resource(CariBeans, "/api/cari/beans")
+api.add_resource(CariCafeBeanTerdekat, "/api/cari/terdekat")
+
 
 api.add_resource(GetPopularCafe, "/api/popularcafe")
+api.add_resource(GetRecentCafe, "/api/recentcafe")
+
 
 api.add_resource(GetHistory, "/api/history/get")
 api.add_resource(AddToHistory, "/api/history/add")
 
 api.add_resource(GetFavoriteCafe, "/api/favorite/get")
+
 api.add_resource(GetFavoriteCafeDetail, "/api/favorite/get/<int:cafeId>")
 api.add_resource(ToggleFavorite, "/api/favorite/toggle/<int:cafeId>")
-# api.add_resource(AddToFavorite, "/api/favorite/add")
+
 api.add_resource(DeleteFavorite, "/api/favorite/delete")
 
 api.add_resource(AddReview, "/api/review/add")
 api.add_resource(GetDetailCafe, "/api/detail/get/<int:cafeId>")
 # api.add_resource(AddReview, "api/review/edit")
 # api.add_resource(AddReview, "api/review/hapus")
+
+api.add_resource(AddToFavorite, "/api/favorite/add")
+
 
 api.add_resource(GetListCafeForReview, "/api/review/cafelist")
 api.add_resource(AddToListCafeForReview, "/api/review/addlist")
@@ -645,11 +735,13 @@ api.add_resource(GetProfile, "/api/profile/get")
 
 api.add_resource(AddPoint, "/api/point/post")
 
+
 api.add_resource(GetUserInfo, "/api/userinfo")
       
-api.add_resource(CariCafeBeanTerdekat, "/api/cari/terdekat")
 
-api.add_resource(GetRecentCafe, "/api/recentcafe")
+
+api.add_resource(UpdatePushToken, "/api/token/update")
+
 
 
 
