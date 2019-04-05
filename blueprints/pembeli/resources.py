@@ -692,7 +692,6 @@ class UpdatePushToken(Resource):
 
 api.add_resource(GetDetailCafe, "/api/detail/get/<int:cafeId>")
 
-api.add_resource(GetUserInfo, "/api/userinfo")
       
 api.add_resource(CariCafe, "/api/cari/cafe")
 api.add_resource(CariBeans, "/api/cari/beans")
@@ -714,11 +713,10 @@ api.add_resource(ToggleFavorite, "/api/favorite/toggle/<int:cafeId>")
 api.add_resource(DeleteFavorite, "/api/favorite/delete")
 
 api.add_resource(AddReview, "/api/review/add")
-api.add_resource(GetDetailCafe, "/api/detail/get/<int:cafeId>")
 # api.add_resource(AddReview, "api/review/edit")
 # api.add_resource(AddReview, "api/review/hapus")
 
-api.add_resource(AddToFavorite, "/api/favorite/add")
+# api.add_resource(AddToFavorite, "/api/favorite/add")
 
 
 api.add_resource(GetListCafeForReview, "/api/review/cafelist")
