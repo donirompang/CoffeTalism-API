@@ -10,9 +10,11 @@ class Pembeli(db.Model):
     name = db.Column(db.String(100))
     password = db.Column(db.String(100))
     email = db.Column(db.String(100), unique=True)
+
     point = db.Column(db.Integer, default=0)
-    bagde = db.Column(db.String(100), default="Amateur")
-    profilePicture = db.Column(db.String(100))
+    bagde = db.Column(db.String(100))
+    profilePicture = db.Column(db.Text)
+
     status = db.Column(db.String(100), default="pembeli")
     pushToken = db.Column(db.String(200), default="")
 

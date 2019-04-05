@@ -11,7 +11,7 @@ class Penjual(db.Model):
     name = db.Column(db.String(100))
     email = db.Column(db.String(100), unique=True)
     rating = db.Column(db.Integer)
-    photo = db.Column(db.String(100))
+    photo = db.Column(db.Text)
     location = db.Column(db.String(255))
     alamat = db.Column(db.String(255))
     status = db.Column(db.String(100), default="penjual")

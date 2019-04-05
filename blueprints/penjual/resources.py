@@ -239,6 +239,33 @@ class getProfil(Resource):
             resp['results'] = review
         return resp, 200, { 'Content-Type': 'application/json' }
 
+class EditProfilePenjual(Resource):
+    @jwt_required
+    def put(self):
+        penjual = get_jwt_claims()
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', location='json', default=None)
+        parser.add_argument('photo', location='json', default=None)
+
+        args = parser.parse_args()
+        qry_penjual = Penjual.query.filter_by(id=penjual['id']).first()
+
+        if qry_penjual is None:
+            return {'Message': 'user belum terdaftar'}, 404, {'Content-Type': 'application/json'}
+
+        else:
+            if args['name'] is not None:
+                qry_penjual.name =args['name']
+
+            if args['photo'] is not None:
+                qry_penjual.photo =args['photo']
+            
+            db.session.commit()
+            resp = {}
+            resp['status'] = 200
+            resp['result'] = marshal (qry_penjual, Penjual.response_field)
+            return resp, 200, { 'Content-Type': 'application/json' }
+
 
 class AddDetailTransaksi(Resource):
     @jwt_required
@@ -282,6 +309,7 @@ class GetAllPushToken(Resource):
 
 
 
+api.add_resource(EditProfilePenjual, "/api/profile/edit")
 api.add_resource(addProduct, "/api/product/tambah")
 api.add_resource(editProduct, "/api/product/edit")
 api.add_resource(deleteProduct, "/api/product/delete/<int:idProduct>")
