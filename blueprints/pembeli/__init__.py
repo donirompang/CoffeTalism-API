@@ -12,7 +12,8 @@ class Pembeli(db.Model):
     email = db.Column(db.String(100), unique=True)
     point = db.Column(db.Integer)
     bagde = db.Column(db.String(100))
-    profilePicture = db.Column(db.String(100))
+    profilePicture = db.Column(db.Text)
+    status = db.Column(db.String(100), default="pembeli")
 
 
     response_field = {
@@ -23,10 +24,11 @@ class Pembeli(db.Model):
         "email" : fields.String,
         "point" : fields.Integer,
         "bagde" : fields.String,
-        "profilePicture" : fields.String
+        "profilePicture" : fields.String,
+        "status" : fields.String
     }
 
-    def __init__ (self, id, username, name, password, email, point, bagde, profilePicture):
+    def __init__ (self, id, username, name, password, email, point, bagde, profilePicture, status):
         self.id = id
         self.username = username
         self.name = name
@@ -35,6 +37,7 @@ class Pembeli(db.Model):
         self.point = point
         self.bagde = bagde
         self.profilePicture = profilePicture
+        self.status = status
 
     def __repr__(self):
         return f'<Pembeli {self.id}>'

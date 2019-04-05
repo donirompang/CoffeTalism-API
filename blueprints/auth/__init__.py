@@ -92,7 +92,7 @@ class RegisterPembeli(Resource):
             return resp, 200, { 'Content-Type': 'application/json' }
 
 
-        pembeliBaru = Pembeli(None, args['username'], args['name'], args['password'], args['email'], None, None, args['profilePicture'])
+        pembeliBaru = Pembeli(None, args['username'], args['name'], args['password'], args['email'], 0, None, args['profilePicture'], None)
         
         
 
@@ -176,7 +176,7 @@ class RegisterPenjual(Resource):
             resp['results'] = "Password not match"
             return resp, 200, { 'Content-Type': 'application/json' }
 
-        penjualBaru = Penjual(None, args['username'], args['password'], args['name'], args['email'], None, args['photo'], None)
+        penjualBaru = Penjual(None, args['username'], args['password'], args['name'], args['email'], None, args['photo'], None, None)
         db.session.add(penjualBaru)
         db.session.commit()
 

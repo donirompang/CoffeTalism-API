@@ -69,7 +69,7 @@ class deleteProduct(Resource):
     def delete(self, idProduct):
         penjual = get_jwt_claims()
 
-        qry_product = Products.query.filter_by(coffeeShopId=penjual['id']).filter_by(id=idProduct)
+        qry_product = Products.query.filter_by(coffeeShopId=penjual['id']).filter_by(id=idProduct).first()
 
         if qry_product is not None:
             db.session.delete(qry_product)
@@ -81,7 +81,7 @@ class getProduct(Resource):
     @jwt_required
     def get(self):
         penjual_id = get_jwt_claims()['id']
-        qry = Products.query.filter_by(coffeeShopId = penjual_id)
+        qry = Products.query.filter_by(coffeeShopId = penjual_id).all()
         listProduct = []
         resp = {}
         resp['status'] = 404
@@ -92,6 +92,20 @@ class getProduct(Resource):
                 listProduct.append(product)
             resp['status'] = 200
             resp['results'] = listProduct
+        return resp, 200, { 'Content-Type': 'application/json' }
+
+class getProductId(Resource):
+    @jwt_required
+    def get(self, idProduct):
+        penjual_id = get_jwt_claims()['id']
+        qry = Products.query.filter_by(coffeeShopId = penjual_id).filter_by(id=idProduct).first()
+        resp = {}
+        resp['status'] = 404
+        resp['results'] = []
+        if qry:
+            product = marshal(qry, Products.response_field)
+            resp['status'] = 200
+            resp['results'] = product
         return resp, 200, { 'Content-Type': 'application/json' }
 
 class addBeans(Resource):
@@ -123,17 +137,16 @@ class editBeans(Resource):
         parser.add_argument('notes', location='json', default=None)
 
         args = parser.parse_args()
-        qry_product = Beans.query.filter_by(cafeShopId=penjual['id']).filter_by(id=args['idProduct']).first()
+
+        qry_product = Beans.query.filter_by(cafeShopId=penjual['id']).filter_by(id=args['idBeans']).first()
+
 
         if qry_product is None:
             return {'Message': 'beans tidak ditemukan'}, 404, {'Content-Type': 'application/json'}
 
         else:
-            if args['productname'] is not None:
-                qry_product.name = args['productname']
-
-            if args['price'] is not None:
-                qry_product.price =args['price']
+            if args['coffeename'] is not None:
+                qry_product.name = args['coffeename']
 
             if args['photo'] is not None:
                 qry_product.photoUrl =args['photo']
@@ -152,7 +165,7 @@ class deleteBeans(Resource):
     def delete(self, idProduct):
         penjual = get_jwt_claims()
 
-        qry_product = Beans.query.filter_by(cafeShopId=penjual['id']).filter_by(id=idProduct)
+        qry_product = Beans.query.filter_by(cafeShopId=penjual['id']).filter_by(id=idProduct).first()
 
         if qry_product is not None:
             db.session.delete(qry_product)
@@ -164,7 +177,7 @@ class getBeans(Resource):
     @jwt_required
     def get(self):
         penjual_id = get_jwt_claims()['id']
-        qry = Beans.query.filter_by(cafeShopId = penjual_id)
+        qry = Beans.query.filter_by(cafeShopId = penjual_id).all()
         listProduct = []
         resp = {}
         resp['status'] = 404
@@ -177,11 +190,25 @@ class getBeans(Resource):
             resp['results'] = listProduct
         return resp, 200, { 'Content-Type': 'application/json' }
 
+class getBeansId(Resource):
+    @jwt_required
+    def get(self, idBeans):
+        penjual_id = get_jwt_claims()['id']
+        qry = Beans.query.filter_by(cafeShopId = penjual_id).filter_by(id = idBeans).first()
+        resp = {}
+        resp['status'] = 404
+        resp['results'] = []
+        if qry:
+            bean = marshal(qry, Beans.response_field)
+            resp['status'] = 200
+            resp['results'] = bean
+        return resp, 200, { 'Content-Type': 'application/json' }
+
 class getReview(Resource):
     @jwt_required
     def get(self):
         penjual_id = get_jwt_claims()['id']
-        qry = Review.query.filter_by(cafeShopId = penjual_id)
+        qry = Review.query.filter_by(cafeShopId = penjual_id).all()
         listReview = []
         resp = {}
         resp['status'] = 404
@@ -209,30 +236,48 @@ class getProfil(Resource):
             resp['results'] = review
         return resp, 200, { 'Content-Type': 'application/json' }
 
-class getReview(Resource):
+class EditProfilePenjual(Resource):
     @jwt_required
-    def get(self):
-        penjual_id = get_jwt_claims()['id']
-        qry = Review.query.filter_by(cafeShopId = penjual_id)
-        listReview = []
-        resp = {}
-        resp['status'] = 404
-        resp['results'] = []
-        if qry:
-            for row in qry:
-                review = marshal(row, Review.response_field)
-                listReview.append(review)
-            resp['status'] = 200
-            resp['results'] = listReview
-        return resp, 200, { 'Content-Type': 'application/json' }
+    def put(self):
+        penjual = get_jwt_claims()
+        parser = reqparse.RequestParser()
+        parser.add_argument('name', location='json', default=None)
+        parser.add_argument('photo', location='json', default=None)
 
+        args = parser.parse_args()
+        qry_penjual = Penjual.query.filter_by(id=penjual['id']).first()
+
+        if qry_penjual is None:
+            return {'Message': 'user belum terdaftar'}, 404, {'Content-Type': 'application/json'}
+
+        else:
+            if args['name'] is not None:
+                qry_penjual.name =args['name']
+
+            if args['photo'] is not None:
+                qry_penjual.photo =args['photo']
+            
+            db.session.commit()
+            resp = {}
+            resp['status'] = 200
+            resp['result'] = marshal (qry_penjual, Penjual.response_field)
+            return resp, 200, { 'Content-Type': 'application/json' }
+
+
+
+api.add_resource(EditProfilePenjual, "/api/profile/edit")
 api.add_resource(addProduct, "/api/product/tambah")
 api.add_resource(editProduct, "/api/product/edit")
 api.add_resource(deleteProduct, "/api/product/delete/<int:idProduct>")
 api.add_resource(getProduct, "/api/product/get")
+api.add_resource(getProductId, "/api/product/get/<int:idProduct>")
 api.add_resource(addBeans, "/api/beans/tambah")
 api.add_resource(editBeans, "/api/beans/edit")
 api.add_resource(deleteBeans, "/api/beans/delete/<int:idProduct>")
 api.add_resource(getBeans, "/api/beans/get")
+
 api.add_resource(getProfil, "/api/profil/get")
 api.add_resource(getReview, "/api/review/get")
+
+api.add_resource(getBeansId, "/api/beans/get/<int:idBeans>")
+
