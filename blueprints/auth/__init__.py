@@ -134,8 +134,9 @@ class RegisterPenjual(Resource):
         parser.add_argument('password', location='json', required=True)
         parser.add_argument('k_password', location='json', required=True)
         parser.add_argument('email', location='json', required=True)
-        parser.add_argument('photo', location='json', required=True)
+        parser.add_argument('photo', location='json', default="https://vrteje8p14-flywheel.netdna-ssl.com/wp-content/uploads/2018/10/coffee-801781_1280.jpg")
         parser.add_argument('alamat', location='json', required=True)
+        parser.add_argument('location', location='json', default="-7.982524#112.630801")
       
         args = parser.parse_args()
 
@@ -177,7 +178,7 @@ class RegisterPenjual(Resource):
             resp['results'] = "Password not match"
             return resp, 200, { 'Content-Type': 'application/json' }
 
-        penjualBaru = Penjual(None, args['username'], args['password'], args['name'], args['email'], None, args['photo'], None, args['alamat'], None)
+        penjualBaru = Penjual(None, args['username'], args['password'], args['name'], args['email'], None, args['photo'], args['location'], args['alamat'], None)
         db.session.add(penjualBaru)
         db.session.commit()
 

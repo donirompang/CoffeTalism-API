@@ -12,6 +12,7 @@ from blueprints.beans import *
 from blueprints.penjual import *
 from blueprints.review import *
 from blueprints.products import *
+from blueprints.detailtransaksi import *
 
 
 from blueprints.list_review import *
@@ -388,7 +389,7 @@ class AddReview(Resource):
 
 
         else:
-            return {"message" : "ID Cafe not found"}, 404, { 'Content-Type': 'application/json' }
+            return {"message" : "ID Cafe not found"}, 200, { 'Content-Type': 'application/json' }
 
         db.session.add(review)
         db.session.commit()
@@ -495,33 +496,54 @@ class GetProfile(Resource):
 
 
 
+
+
+
 class AddPoint(Resource):
     @jwt_required
     def post(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('cafeId', location='json', type=int, required=True)
+        parser.add_argument('transaksiId', location='json', type=int, required=True)
 
         args = parser.parse_args()
  
         userId = get_jwt_claims()['id']
 
-        user = Pembeli.query.get(userId)
-        if user is not None:
-            user.point = user.point + 10
-        else:
-            return {"message" : "ID Cafe not found"}, 404, { 'Content-Type': 'application/json' }
+        tx = DetailTransaksi.query.get(args['transaksiId'])
+        resp = {}
+        resp['status'] = 404
+        if tx is not None:
+            if tx.scanned == 'ya':
+                return resp, 200, { 'Content-Type': 'application/json' }
+            tx.userId = userId
+            tx.scanned = 'ya'
+            db.session.commit()
+
+            user = Pembeli.query.get(userId)
+            user.point = user.point + tx.totalTransaksi / 10000
+
+            if user.point < 50 :
+                user.bagde = 'Coffee Newbie'
+            elif user.point < 150:
+                user.bagde = "Coffee Enthusiast"
+            elif user.point >= 150:
+                user.bagde = "Coffee Addict"
+
+            db.session.commit()
+
+            beans = Beans.query.get(tx.beanId)
+            cafeId = beans.cafeShopId
+
+            cafe_for_review = ListReview(None, userId, cafeId, None)
+
+            db.session.add(cafe_for_review)
+            db.session.commit()
+            resp['status'] = 200
+            return resp, 200, { 'Content-Type': 'application/json' }
+
+        return resp, 200, { 'Content-Type': 'application/json' }
         
-        if user.point < 50 :
-            user.bagde = 'Coffee Newbie'
-        elif user.point < 150:
-            user.bagde = "Coffee Enthusiast"
-        elif user.point >= 150:
-            user.bagde = "Coffee Addict"
-        db.session.commit()
-
-        return {"message" : "SUCCESS"}, 200, { 'Content-Type': 'application/json' }
-
-
+       
 
 
 
@@ -531,7 +553,7 @@ class ToggleFavorite(Resource):
         userId = get_jwt_claims()['id']
         qry = Favorite.query.filter_by(userId = userId).filter_by(cafeId=cafeId).first()
         resp = {}
-        if qry:
+        if qry is not None:
             if qry.deleted == 'tidak' :
                 qry.deleted = 'ya'
             else:
@@ -566,7 +588,7 @@ class GetFavoriteCafeDetail(Resource):
                 return resp, 200, { 'Content-Type': 'application/json' }
         resp['status'] = 404
         resp['results'] = "Not_found"
-        return resp, 404, { 'Content-Type': 'application/json' }
+        return resp, 200, { 'Content-Type': 'application/json' }
 
 
 class GetDetailCafe(Resource):
@@ -600,6 +622,25 @@ class GetDetailCafe(Resource):
         resp['results']['review'] = list_review
         return resp, 200, { 'Content-Type': 'application/json' }
 
+
+class UpdatePushToken(Resource):
+    @jwt_required
+    def put(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('token', location='json', required=True)
+
+        args = parser.parse_args()
+        userId = get_jwt_claims()['id']
+        user = Pembeli.query.get(userId)
+        resp = {}
+        resp['status'] = 404
+        if user is not None:
+            user.pushToken = args['token']
+            db.session.commit()
+            resp['status'] = 200
+            resp['results'] = marshal(user, Pembeli.response_field)
+
+        return resp, 200, {'Content-Type': 'application/json'}
 
 
 api.add_resource(GetDetailCafe, "/api/detail/get/<int:cafeId>")
@@ -638,5 +679,8 @@ api.add_resource(GetReview, "/api/review/get")
 api.add_resource(GetProfile, "/api/profile/get")
 
 api.add_resource(AddPoint, "/api/point/post")
+
+api.add_resource(UpdatePushToken, "/api/token/update")
+
 
 
