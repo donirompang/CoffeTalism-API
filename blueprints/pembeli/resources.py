@@ -350,13 +350,18 @@ class ToggleFavorite(Resource):
             return resp, 200, { 'Content-Type': 'application/json' }
         else:
             cafe = Penjual.query.get(cafeId)
-            favorite = Favorite(None, userId, cafeId, cafe.name, 'tidak')
-            db.session.add(favorite)
-            db.session.commit()
-            coffee = marshal(cafe, Favorite.response_field)
-            resp['status'] = 200
-            resp['results'] = coffee
-            return resp, 200, { 'Content-Type': 'application/json' }
+            if cafe is not None:
+                favorite = Favorite(None, userId, cafeId, cafe.name, 'tidak')
+                db.session.add(favorite)
+                db.session.commit()
+                coffee = marshal(cafe, Favorite.response_field)
+                resp['status'] = 200
+                resp['results'] = coffee
+                return resp, 200, { 'Content-Type': 'application/json' }
+            else:
+                resp['status'] = 200
+                resp['results'] = "Coffee Id not found"
+                return resp, 200, { 'Content-Type': 'application/json' }
             
 
 class GetFavoriteCafeDetail(Resource):
