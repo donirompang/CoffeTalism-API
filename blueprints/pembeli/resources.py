@@ -386,7 +386,7 @@ class AddReview(Resource):
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('cafeShopId', location='json', type=int, required=True)
-        parser.add_argument('rating', location='json', type=int, required=True)
+        parser.add_argument('rating', location='json', required=True)
         parser.add_argument('review', location='json', required=True)
 
         
@@ -397,20 +397,27 @@ class AddReview(Resource):
         cafeUserName = get_jwt_claims()['name']
         
         cafe = Penjual.query.get(args['cafeShopId'])
+        review = ''
         if cafe is not None:
             reviewHome = ListReview.query.filter_by(userId = cafeUserId).filter_by(cafeId = args['cafeShopId']).filter_by(reviewed = 'tidak').first()
-            reviewHome.reviewed = 'ya'
-            db.session.commit()
-            review = Review(None, args['cafeShopId'], cafe.name, cafeUserId, cafeUserName, args['rating'], args['review'])
+            if reviewHome is not None:
+                reviewHome.reviewed = 'ya'
+                db.session.commit()
+                review = Review(None, args['cafeShopId'], cafe.name, cafeUserId, cafeUserName, args['rating'], args['review'], None)
+                db.session.add(review)
+                db.session.commit()
 
+                cafe.rating = (cafe.rating + int(args['rating'])) / 2
+                db.session.commit()
 
+                return {"message" : "SUCCESS"}, 200, { 'Content-Type': 'application/json' }
+            
+            else:
+                return {"message" : "Tidak ada dalam list review"}, 200, { 'Content-Type': 'application/json' }
         else:
             return {"message" : "ID Cafe not found"}, 200, { 'Content-Type': 'application/json' }
 
-        db.session.add(review)
-        db.session.commit()
 
-        return {"message" : "SUCCESS"}, 200, { 'Content-Type': 'application/json' }
 
 
 
@@ -713,10 +720,7 @@ api.add_resource(ToggleFavorite, "/api/favorite/toggle/<int:cafeId>")
 api.add_resource(DeleteFavorite, "/api/favorite/delete")
 
 api.add_resource(AddReview, "/api/review/add")
-# api.add_resource(AddReview, "api/review/edit")
-# api.add_resource(AddReview, "api/review/hapus")
 
-# api.add_resource(AddToFavorite, "/api/favorite/add")
 
 
 api.add_resource(GetListCafeForReview, "/api/review/cafelist")

@@ -11,6 +11,7 @@ from blueprints.beans import *
 from blueprints.review import *
 from blueprints.detailtransaksi import *
 from blueprints.favorite import *
+from blueprints.pembeli import *
 
 bp_penjual = Blueprint('penjual', __name__)
 api = Api(bp_penjual)
