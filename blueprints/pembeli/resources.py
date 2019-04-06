@@ -5,6 +5,8 @@ from blueprints import db
 from flask_jwt_extended import jwt_required, get_jwt_claims
 from jinja2 import TemplateNotFound
 from datetime import datetime
+import string
+import random
 from . import *
 from blueprints.favorite import *
 from blueprints.history import *
@@ -13,12 +15,13 @@ from blueprints.penjual import *
 from blueprints.review import *
 from blueprints.products import *
 from blueprints.detailtransaksi import *
+from blueprints.reward import *
 
 
 from blueprints.list_review import *
 from sqlalchemy import func, or_
 
-from math import sin, cos, sqrt, atan2, radians
+from math import sin, cos, sqrt, atan2, radians, floor
 
 bp_pembeli = Blueprint('pembeli', __name__)
 api = Api(bp_pembeli)
@@ -39,6 +42,10 @@ def get_distance(lat1, lon1, lat2, lon2):
 
     distance = R * c * 1000
     return distance
+
+def randomStringDigits(stringLength=6):
+    lettersAndDigits = string.ascii_letters + string.digits
+    return ''.join(random.choice(lettersAndDigits) for i in range(stringLength))
 
 
 class CariCafe(Resource):
@@ -513,39 +520,65 @@ class AddPoint(Resource):
         args = parser.parse_args()
  
         userId = get_jwt_claims()['id']
+        userPoint =get_jwt_claims()['point']
+        userName =get_jwt_claims()['name']
+        print("cikikikiki", userPoint)
 
         tx = DetailTransaksi.query.get(args['transaksiId'])
         resp = {}
         resp['status'] = 404
         if tx is not None:
             if tx.scanned == 'ya':
+                resp['status'] = 200
+                resp['result'] = 'Point telah ditambahkan'
                 return resp, 200, { 'Content-Type': 'application/json' }
             tx.userId = userId
             tx.scanned = 'ya'
             db.session.commit()
 
             user = Pembeli.query.get(userId)
-            user.point = user.point + tx.totalTransaksi / 10000
+            tmp = user.point
+            user.point = user.point + tx.totalTransaksi / 1000
 
-            if user.point < 50 :
+            if user.point < 500 :
                 user.bagde = 'Coffee Newbie'
-            elif user.point < 150:
+            elif user.point < 1500:
                 user.bagde = "Coffee Enthusiast"
-            elif user.point >= 150:
+            elif user.point >= 1500:
                 user.bagde = "Coffee Addict"
 
             db.session.commit()
 
             beans = Beans.query.get(tx.beanId)
             cafeId = beans.cafeShopId
+            desc = "voucher senilai 50000"
+            
+            tmpVal = floor(tmp / 500)
+            newVal = floor((tmp + ( tx.totalTransaksi / 1000))/500)
+            voucher = newVal - tmpVal
+            print("lalalala", tmpVal, newVal, voucher, tmp, tx.totalTransaksi, userId, userName)
+            for x in range(voucher):
+                code = randomStringDigits(6)
+                reward = Reward(None, None, userId, code, desc, "unused" )
+                db.session.add(reward)
+                db.session.commit()
 
             cafe_for_review = ListReview(None, userId, cafeId, None)
 
             db.session.add(cafe_for_review)
             db.session.commit()
-            resp['status'] = 200
-            return resp, 200, { 'Content-Type': 'application/json' }
 
+            history = History(None, userId, cafeId, None, None)
+            db.session.add(history)
+            db.session.commit()
+
+            resp['status'] = 200
+            if voucher != 0:
+                resp['result'] = "Selamat anda mendapatkan "+ str(voucher)+ " voucher"
+                return resp, 200, { 'Content-Type': 'application/json' }
+            else:
+                resp['result'] = 'Point sudah ditambahkan'
+                return resp, 200, { 'Content-Type': 'application/json' }
         return resp, 200, { 'Content-Type': 'application/json' }
         
        
