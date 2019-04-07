@@ -12,7 +12,7 @@ class Pembeli(db.Model):
     email = db.Column(db.String(100), unique=True)
 
     point = db.Column(db.Integer, default=0)
-    bagde = db.Column(db.String(100))
+    bagde = db.Column(db.String(100), default="Coffee Newbie")
     profilePicture = db.Column(db.Text)
 
     status = db.Column(db.String(100), default="pembeli")
