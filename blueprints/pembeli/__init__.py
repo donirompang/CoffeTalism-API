@@ -17,6 +17,7 @@ class Pembeli(db.Model):
 
     status = db.Column(db.String(100), default="pembeli")
     pushToken = db.Column(db.String(200), default="")
+    jumlahNotif = db.Column(db.Integer, default=0)
 
 
     response_field = {
@@ -29,10 +30,12 @@ class Pembeli(db.Model):
         "bagde" : fields.String,
         "profilePicture" : fields.String,
         "status" : fields.String,
-        "pushToken" : fields.String
+        "pushToken" : fields.String,
+        "jumlahNotif" : fields.Integer
+
     }
 
-    def __init__ (self, id, username, name, password, email, point, bagde, profilePicture, status, pushToken):
+    def __init__ (self, id, username, name, password, email, point, bagde, profilePicture, status, pushToken, jumlahNotif):
         self.id = id
         self.username = username
         self.name = name
@@ -43,6 +46,7 @@ class Pembeli(db.Model):
         self.profilePicture = profilePicture
         self.status = status
         self.pushToken = pushToken
+        self.jumlahNotif = jumlahNotif
 
     def __repr__(self):
         return f'<Pembeli {self.id}>'

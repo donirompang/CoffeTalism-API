@@ -292,7 +292,7 @@ class AddDetailTransaksi(Resource):
         return resp, 200, { 'Content-Type': 'application/json' }
 
 
-class GetAllPushToken(Resource):
+class GetFavoriteToken(Resource):
     @jwt_required
     def get(self):
         penjualId = get_jwt_claims()['id']
@@ -352,6 +352,25 @@ class getAllRedeemRewardVoucher(Resource):
             resp['results'] = listProduct
         return resp, 200, { 'Content-Type': 'application/json' }
 
+
+class GetAllPushToken(Resource):
+    @jwt_required
+    def get(self):
+        penjualId = get_jwt_claims()['id']
+        qry = Pembeli.query.filter_by().all()
+        list_token = []
+        resp = {}
+        resp['status'] = 404
+        resp['results'] = list_token
+        if qry is not None:
+            for row in qry:
+                list_token.append(row.pushToken)
+            resp['status'] = 200
+        
+        return resp, 200, { 'Content-Type': 'application/json' }
+
+
+
 api.add_resource(EditProfilePenjual, "/api/profile/edit")
 api.add_resource(addProduct, "/api/product/tambah")
 api.add_resource(editProduct, "/api/product/edit")
@@ -374,5 +393,6 @@ api.add_resource(getBeansId, "/api/beans/get/<int:idBeans>")
 
 api.add_resource(AddDetailTransaksi, "/api/transaksi/add")
 
-api.add_resource(GetAllPushToken, "/api/pushtoken/all")
+api.add_resource(GetFavoriteToken, "/api/pushtoken/all")
+api.add_resource(GetAllPushToken, "/api/pushtoken")
 
