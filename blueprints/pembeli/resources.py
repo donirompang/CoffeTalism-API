@@ -734,6 +734,28 @@ class UpdatePushToken(Resource):
 
         return resp, 200, {'Content-Type': 'application/json'}
 
+class GetReward(Resource):
+    @jwt_required
+    def get(self):
+        userId = get_jwt_claims()['id']
+        qry = Reward.query.filter_by(cafeUserId=userId).filter_by(status="unused").all()
+        list_reward = []
+
+        if qry is not None:
+            for row in qry:
+                reward = marshal(row, Reward.response_field)
+                list_reward.append(reward)            
+
+        resp = {}
+        resp['status'] = 404
+        resp['results'] = list_reward
+        if len(list_reward) > 0:
+            resp['status'] = 200
+            resp['results'] = list_reward
+            return resp, 200, { 'Content-Type': 'application/json' }
+        
+        return resp, 200, { 'Content-Type': 'application/json' } 
+
 
 api.add_resource(GetDetailCafe, "/api/detail/get/<int:cafeId>")
 
@@ -763,7 +785,7 @@ api.add_resource(AddReview, "/api/review/add")
 
 api.add_resource(GetListCafeForReview, "/api/review/cafelist")
 api.add_resource(AddToListCafeForReview, "/api/review/addlist")
-
+api.add_resource(GetReward, "/api/reward/get")
 
 api.add_resource(UpdateReview, "/api/review/edit")
 api.add_resource(DeleteReview, "/api/review/hapus")
