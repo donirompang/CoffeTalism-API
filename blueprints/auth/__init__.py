@@ -52,7 +52,7 @@ class RegisterPembeli(Resource):
         parser.add_argument('password', location='json', required=True)
         parser.add_argument('k_password', location='json', required=True)
         parser.add_argument('email', location='json', required=True)
-        parser.add_argument('profilePicture', location='json')
+        parser.add_argument('profilePicture', location='json', default=None)
 
         args = parser.parse_args()
 
@@ -92,7 +92,7 @@ class RegisterPembeli(Resource):
             return resp, 200, { 'Content-Type': 'application/json' }
 
 
-        pembeliBaru = Pembeli(None, args['username'], args['name'], args['password'], args['email'], 0, None, args['profilePicture'], None, None)
+        pembeliBaru = Pembeli(None, args['username'], args['name'], args['password'], args['email'], 0, None, args['profilePicture'], None, None, None)
         
         
 

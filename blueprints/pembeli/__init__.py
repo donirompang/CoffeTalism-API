@@ -12,12 +12,15 @@ class Pembeli(db.Model):
     email = db.Column(db.String(100), unique=True)
 
     point = db.Column(db.Integer, default=0)
-    bagde = db.Column(db.String(100))
-    profilePicture = db.Column(db.Text)
+    bagde = db.Column(db.String(100), default="Coffee Newbie")
+    profilePicture = db.Column(db.Text, default=None)
 
     status = db.Column(db.String(100), default="pembeli")
     pushToken = db.Column(db.String(200), default="")
+
     notif = db.Column(db.String(200), default=None)
+
+
 
 
     response_field = {
@@ -31,8 +34,11 @@ class Pembeli(db.Model):
         "profilePicture" : fields.String,
         "status" : fields.String,
         "pushToken" : fields.String,
+
         "notif": fields.String
     }
+
+
 
     def __init__ (self, id, username, name, password, email, point, bagde, profilePicture, status, pushToken, notif):
         self.id = id
@@ -46,6 +52,7 @@ class Pembeli(db.Model):
         self.status = status
         self.pushToken = pushToken
         self.notif = notif
+
 
     def __repr__(self):
         return f'<Pembeli {self.id}>'
