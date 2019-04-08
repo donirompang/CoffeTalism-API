@@ -24,11 +24,12 @@ class addProduct(Resource):
         parser.add_argument('productname', location='json', required=True)
         parser.add_argument('price', location='json', type=int, required=True)
         parser.add_argument('photo', location='json')
+        parser.add_argument('deskripsi', location='json')
 
         args = parser.parse_args()
         penjual = get_jwt_claims()
  
-        new_bean = Products(None, args['productname'], args['price'], args['photo'], penjual['id'], penjual['name'] )
+        new_bean = Products(None, args['productname'], args['price'], args['photo'], penjual['id'], penjual['name'], args['deskripsi'] )
         db.session.add(new_bean)
         db.session.commit()
         resp = {}
@@ -119,10 +120,11 @@ class addBeans(Resource):
         parser.add_argument('coffeename', location='json', required=True)
         parser.add_argument('photo', location='json')
         parser.add_argument('notes', location='json', default=None)
+        parser.add_argument('tipe', location='json', default='Beans Lokal')
 
         args = parser.parse_args()
         penjual = get_jwt_claims()
-        new_bean = Beans(None, args['coffeename'], penjual['id'], penjual['name'], args['photo'], args['notes']  )
+        new_bean = Beans(None, args['coffeename'], penjual['id'], penjual['name'], args['photo'], args['notes'], args['tipe']  )
         db.session.add(new_bean)
         db.session.commit()
         resp = {}
