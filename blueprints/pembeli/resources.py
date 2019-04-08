@@ -639,9 +639,14 @@ class EditProfileUser(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('name', location='json', default=None)
         parser.add_argument('photo', location='json', default=None)
+        parser.add_argument('password', location='json', default=None)
+        parser.add_argument('k_password', location='json', default=None)
 
         args = parser.parse_args()
         qry_user = Pembeli.query.filter_by(id=pembeli['id']).first()
+
+        if args['password'] != args['k_password']:
+            return {'Message': 'Password dan Konfirmasi tidak cocok.'}, 200, {'Content-Type': 'application/json'}
 
         if qry_user is None:
             return {'Message': 'user belum terdaftar'}, 404, {'Content-Type': 'application/json'}
@@ -652,6 +657,9 @@ class EditProfileUser(Resource):
 
             if args['photo'] is not None:
                 qry_user.profilePicture =args['photo']
+
+            if args['password'] is not None:
+                qry_user.password = args['password']
 
             db.session.commit()
             resp = {}

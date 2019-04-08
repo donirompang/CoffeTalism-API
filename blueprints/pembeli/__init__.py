@@ -13,7 +13,7 @@ class Pembeli(db.Model):
 
     point = db.Column(db.Integer, default=0)
     bagde = db.Column(db.String(100), default="Coffee Newbie")
-    profilePicture = db.Column(db.Text)
+    profilePicture = db.Column(db.Text, default=None)
 
     status = db.Column(db.String(100), default="pembeli")
     pushToken = db.Column(db.String(200), default="")

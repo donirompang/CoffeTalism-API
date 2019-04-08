@@ -52,7 +52,7 @@ class RegisterPembeli(Resource):
         parser.add_argument('password', location='json', required=True)
         parser.add_argument('k_password', location='json', required=True)
         parser.add_argument('email', location='json', required=True)
-        parser.add_argument('profilePicture', location='json')
+        parser.add_argument('profilePicture', location='json', default=None)
 
         args = parser.parse_args()
 

@@ -248,9 +248,14 @@ class EditProfilePenjual(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('name', location='json', default=None)
         parser.add_argument('photo', location='json', default=None)
+        parser.add_argument('password', location='json', default=None)
+        parser.add_argument('k_password', location='json', default=None)
 
         args = parser.parse_args()
         qry_penjual = Penjual.query.filter_by(id=penjual['id']).first()
+
+        if args['password'] != args['k_password']:
+            return {'Message': 'Password dan Konfirmasi tidak cocok.'}, 200, {'Content-Type': 'application/json'}
 
         if qry_penjual is None:
             return {'Message': 'user belum terdaftar'}, 404, {'Content-Type': 'application/json'}
@@ -261,6 +266,9 @@ class EditProfilePenjual(Resource):
 
             if args['photo'] is not None:
                 qry_penjual.photo =args['photo']
+
+            if args['password'] is not None:
+                qry_penjual.password = args['password']
             
             db.session.commit()
             resp = {}
@@ -370,6 +378,42 @@ class GetAllPushToken(Resource):
         return resp, 200, { 'Content-Type': 'application/json' }
 
 
+class GetDetailCafe(Resource):
+    @jwt_required
+    def get(self):
+        cafeId = get_jwt_claims()['id']
+        qry = Penjual.query.filter_by(id = cafeId).first()
+        qryBeans = Beans.query.filter_by(cafeShopId = cafeId).all()
+        qryProduct = Products.query.filter_by(coffeeShopId = cafeId).all()
+        qryReview = Review.query.filter_by(cafeShopId = cafeId).all()
+        list_beans = []
+        list_product = []
+        list_review = []
+        cafe = marshal(qry, Penjual.response_field)
+        resp = {}
+
+        if qryBeans:
+            for row in qryBeans:
+                beans = marshal(row, Beans.response_field)
+                list_beans.append(beans)
+        if qryProduct:
+            for row in qryProduct:
+                products = marshal(row, Products.response_field) 
+                list_product.append(products)
+        if qryReview:
+            for row in qryReview:
+                reviews = marshal(row, Review.response_field)
+                list_review.append(reviews)
+        resp['status'] = 200
+        resp['results'] = {}
+        resp['results']['cafe'] = cafe
+        resp['results']['beans'] = list_beans
+        resp['results']['product'] = list_product
+        resp['results']['review'] = list_review
+        return resp, 200, { 'Content-Type': 'application/json' }
+
+
+api.add_resource(GetDetailCafe, "/api/profile")
 
 api.add_resource(EditProfilePenjual, "/api/profile/edit")
 api.add_resource(addProduct, "/api/product/tambah")
