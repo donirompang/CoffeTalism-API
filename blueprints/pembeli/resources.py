@@ -160,7 +160,7 @@ class CariBeans(Resource):
 # by cafe rating
 class GetPopularCafe(Resource):
     def get(self):
-        qry = Penjual.query.order_by(Penjual.rating.desc()).limit(6).all()
+        qry = Penjual.query.order_by(Penjual.rating.desc()).limit(4).all()
         list_cafe = []
         resp = {}
         if qry:
@@ -217,7 +217,7 @@ class GetRecentCafe(Resource):
     @jwt_required
     def get(self):
         userId = get_jwt_claims()['id']
-        qry = History.query.filter_by(userId = userId).order_by(History.id.desc()).limit(6).all()
+        qry = History.query.filter_by(userId = userId).order_by(History.id.desc()).limit(4).all()
         list_cafe = []
         resp = {}
         if qry:
@@ -419,7 +419,12 @@ class AddReview(Resource):
                 db.session.add(review)
                 db.session.commit()
 
-                cafe.rating = (cafe.rating + int(args['rating'])) / 2
+                qry_review = Review.query.filter_by(cafeShopId = args['cafeShopId']).all()
+              
+                if len(qry_review) > 0:
+                    cafe.rating = (cafe.rating + int(args['rating'])) / 2
+                else:
+                    cafe.rating = cafe.rating + int(args['rating'])
                 db.session.commit()
 
                 return {"message" : "SUCCESS"}, 200, { 'Content-Type': 'application/json' }
@@ -541,8 +546,8 @@ class AddPoint(Resource):
         resp['status'] = 404
         if tx is not None:
             if tx.scanned == 'ya':
-                resp['status'] = 200
-                resp['result'] = 'Point telah ditambahkan'
+                resp['status'] = 404
+                resp['result'] = 'Telah di scan'
                 return resp, 200, { 'Content-Type': 'application/json' }
             tx.userId = userId
             tx.scanned = 'ya'
@@ -550,7 +555,7 @@ class AddPoint(Resource):
 
             user = Pembeli.query.get(userId)
             tmp = user.point
-            user.point = user.point + tx.totalTransaksi / 1000
+            user.point = user.point + floor(tx.totalTransaksi / 1000)
 
             if user.point < 500 :
                 user.bagde = 'Coffee Newbie'
@@ -587,6 +592,8 @@ class AddPoint(Resource):
             resp['status'] = 200
             if voucher != 0:
                 resp['result'] = "Selamat anda mendapatkan "+ str(voucher)+ " voucher"
+                user.notif = 'ada'
+                db.session.commit()
                 return resp, 200, { 'Content-Type': 'application/json' }
             else:
                 resp['result'] = 'Point sudah ditambahkan'
@@ -641,6 +648,7 @@ class EditProfileUser(Resource):
         parser.add_argument('photo', location='json', default=None)
         parser.add_argument('password', location='json', default=None)
         parser.add_argument('k_password', location='json', default=None)
+        parser.add_argument('notif', location='json', default=None)
 
         args = parser.parse_args()
         qry_user = Pembeli.query.filter_by(id=pembeli['id']).first()
@@ -657,6 +665,9 @@ class EditProfileUser(Resource):
 
             if args['photo'] is not None:
                 qry_user.profilePicture =args['photo']
+
+            if args['notif'] is not None:
+                qry_user.notif = 'kosong'
 
             if args['password'] is not None:
                 qry_user.password = args['password']
@@ -763,6 +774,42 @@ class GetReward(Resource):
             return resp, 200, { 'Content-Type': 'application/json' }
         
         return resp, 200, { 'Content-Type': 'application/json' } 
+
+
+
+class GetPopularBean(Resource):
+    def get(self):
+        qry = DetailTransaksi.query.filter_by().all()
+        list_bean = {}
+        for row in qry:
+            if row.beanId not in list_bean:
+                list_bean[row.beanId] = 1
+            else:
+                list_bean[row.beanId] += 1
+
+        listbaru = []
+        for key,val in list_bean.items():
+            listbaru.append([key, val])
+        listoutput= []
+        for x in listbaru:
+            qry = Beans.query.get(x[0])
+            if qry is not None:
+                beans = marshal(qry, Beans.response_field)
+                listoutput.append([beans,x[1]])
+        listsorted = []
+
+        for x in range(len(listoutput)):
+            for y in range(len(listoutput)):
+                if listoutput[x][1] > listoutput[y][1]:
+                    tmp = listoutput[x]
+                    listoutput[x] = listoutput[y]
+                    listoutput[y] = tmp
+
+        return listoutput[:3], 200, { 'Content-Type': 'application/json' }
+
+
+
+api.add_resource(GetPopularBean, "/api/bean/popular")
 
 
 api.add_resource(GetDetailCafe, "/api/detail/get/<int:cafeId>")

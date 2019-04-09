@@ -13,6 +13,7 @@ from blueprints.detailtransaksi import *
 from blueprints.favorite import *
 from blueprints.pembeli import *
 from blueprints.reward import *
+from sqlalchemy import func
 
 bp_penjual = Blueprint('penjual', __name__)
 api = Api(bp_penjual)
@@ -24,11 +25,12 @@ class addProduct(Resource):
         parser.add_argument('productname', location='json', required=True)
         parser.add_argument('price', location='json', type=int, required=True)
         parser.add_argument('photo', location='json')
+        parser.add_argument('deskripsi', location='json')
 
         args = parser.parse_args()
         penjual = get_jwt_claims()
  
-        new_bean = Products(None, args['productname'], args['price'], args['photo'], penjual['id'], penjual['name'] )
+        new_bean = Products(None, args['productname'], args['price'], args['photo'], penjual['id'], penjual['name'], args['deskripsi'] )
         db.session.add(new_bean)
         db.session.commit()
         resp = {}
@@ -45,6 +47,8 @@ class editProduct(Resource):
         parser.add_argument('productname', location='json', default=None)
         parser.add_argument('price', location='json', type=int, default=None)
         parser.add_argument('photo', location='json', default=None)
+        parser.add_argument('deskripsi', location='json', default=None)
+
 
         args = parser.parse_args()
         qry_product = Products.query.filter_by(coffeeShopId=penjual['id']).filter_by(id=args['idProduct']).first()
@@ -61,6 +65,9 @@ class editProduct(Resource):
 
             if args['photo'] is not None:
                 qry_product.urlPicture =args['photo']
+
+            if args['deskripsi'] is not None:
+                qry_product.deskripsi =args['deskripsi']
             
             db.session.commit()
             resp = {}
@@ -119,10 +126,11 @@ class addBeans(Resource):
         parser.add_argument('coffeename', location='json', required=True)
         parser.add_argument('photo', location='json')
         parser.add_argument('notes', location='json', default=None)
+        parser.add_argument('tipe', location='json')
 
         args = parser.parse_args()
         penjual = get_jwt_claims()
-        new_bean = Beans(None, args['coffeename'], penjual['id'], penjual['name'], args['photo'], args['notes']  )
+        new_bean = Beans(None, args['coffeename'], penjual['id'], penjual['name'], args['photo'], args['notes'], args['tipe'])
         db.session.add(new_bean)
         db.session.commit()
         resp = {}
@@ -139,6 +147,7 @@ class editBeans(Resource):
         parser.add_argument('coffeename', location='json', default=None)
         parser.add_argument('photo', location='json', default=None)
         parser.add_argument('notes', location='json', default=None)
+        parser.add_argument('tipe', location='json', default=None)
 
         args = parser.parse_args()
 
@@ -157,6 +166,9 @@ class editBeans(Resource):
             
             if args['notes'] is not None:
                 qry_product.notes =args['notes']
+
+            if args['tipe'] is not None:
+                qry_product.tipe =args['tipe']
             
             db.session.commit()
             resp = {}
@@ -343,6 +355,7 @@ class RedeemRewardVoucher(Resource):
             resp['result'] = marshal (qry, Reward.response_field)
             return resp, 200, { 'Content-Type': 'application/json' }
 
+
 class getAllRedeemRewardVoucher(Resource):
     @jwt_required
     def get(self):
@@ -354,10 +367,10 @@ class getAllRedeemRewardVoucher(Resource):
         resp['results'] = []
         if qry:
             for row in qry:
-                reward = marshal(row, Beans.response_field)
+                reward = marshal(row, Reward.response_field)
                 listReward.append(reward)
             resp['status'] = 200
-            resp['results'] = listProduct
+            resp['results'] = listReward
         return resp, 200, { 'Content-Type': 'application/json' }
 
 
@@ -413,6 +426,51 @@ class GetDetailCafe(Resource):
         return resp, 200, { 'Content-Type': 'application/json' }
 
 
+class CekKodeVocer(Resource):
+    @jwt_required
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('code', location='json', required=True)
+
+        args = parser.parse_args()
+
+        penjualId = get_jwt_claims()['id']
+
+        qry = Reward.query.filter(Reward.code == func.binary(args['code'])).filter_by(status = 'unused').first()
+        
+        if qry is not None:
+            qry.cafeShopId = penjualId
+            qry.status = 'used'
+
+            db.session.commit()
+
+            return {"Message" : "Valid vocer"}, 200, { 'Content-Type': 'application/json' }
+        return {"Message" : "Invalid vocer"}, 200, { 'Content-Type': 'application/json' }
+
+
+
+class UpdateLokasi(Resource):
+    @jwt_required
+    def put(self):
+        parser = reqparse.RequestParser()
+
+        parser.add_argument('location', location='json', required=True)
+   
+        args = parser.parse_args()
+
+        penjualId = get_jwt_claims()['id']
+
+        qry_penjual = Penjual.query.get(penjualId)
+
+        if qry_penjual is not None:
+            qry_penjual.location = args['location']
+            db.session.commit()
+
+            return {"Message" : "Sukses"}, 200, { 'Content-Type': 'application/json' }
+        return {"Message" : "Not found"}, 200, { 'Content-Type': 'application/json' }
+
+
+
 api.add_resource(GetDetailCafe, "/api/profile")
 
 api.add_resource(EditProfilePenjual, "/api/profile/edit")
@@ -440,3 +498,7 @@ api.add_resource(AddDetailTransaksi, "/api/transaksi/add")
 api.add_resource(GetFavoriteToken, "/api/pushtoken/all")
 api.add_resource(GetAllPushToken, "/api/pushtoken")
 
+
+api.add_resource(CekKodeVocer, "/api/vocer/cek")
+
+api.add_resource(UpdateLokasi, "/api/lokasi/update")

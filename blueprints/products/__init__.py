@@ -12,6 +12,7 @@ class Products(db.Model):
     urlPicture = db.Column(db.String(200), default="https://imgur.com/a/KY126k9")
     coffeeShopId = db.Column(db.Integer)
     coffeeShopName = db.Column(db.String(200))
+    deskripsi = db.Column(db.String(230))
     
 
     response_field = {
@@ -20,16 +21,18 @@ class Products(db.Model):
         "price" : fields.Integer,
         "urlPicture" : fields.String,
         "coffeeShopId" : fields.Integer,
-        "coffeeShopName" : fields.String
+        "coffeeShopName" : fields.String,
+        "deskripsi" : fields.String
     }
 
-    def __init__ (self, id, name, price, urlPicture, coffeeShopId, coffeeShopName):
+    def __init__ (self, id, name, price, urlPicture, coffeeShopId, coffeeShopName, deskripsi):
         self.id = id
         self.name = name
         self.price = price
         self.urlPicture = urlPicture
         self.coffeeShopId = coffeeShopId
         self.coffeeShopName = coffeeShopName
+        self.deskripsi = deskripsi
 
     def __repr__(self):
         return f'<Products {self.id}>'

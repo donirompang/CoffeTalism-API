@@ -12,6 +12,7 @@ class Beans(db.Model):
     cafeShopName = db.Column(db.String(200))
     photoUrl = db.Column(db.String(200))
     notes = db.Column(db.String(200))
+    tipe = db.Column(db.String(200), default="Beans Lokal")
     
 
     response_field = {
@@ -20,16 +21,18 @@ class Beans(db.Model):
         "cafeShopId" : fields.Integer,
         "cafeShopName" : fields.String,
         "photoUrl" : fields.String,
-        "notes" : fields.String
+        "notes" : fields.String,
+        "tipe" : fields.String
     }
 
-    def __init__ (self, id, name, cafeShopId, cafeShopName, photoUrl, notes):
+    def __init__ (self, id, name, cafeShopId, cafeShopName, photoUrl, notes, tipe):
         self.id = id
         self.name = name
         self.cafeShopId = cafeShopId
         self.cafeShopName = cafeShopName
         self.photoUrl = photoUrl
         self.notes = notes
+        self.tipe = tipe
 
     def __repr__(self):
         return f'<Beans {self.id}>'
