@@ -9,10 +9,10 @@ class Products(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True, unique=True)
     name = db.Column(db.String(200))
     price = db.Column(db.Integer)
-    urlPicture = db.Column(db.String(200), default="https://imgur.com/a/KY126k9")
+    urlPicture = db.Column(db.String(200), default="https://imgur.com/DvfZYz7")
     coffeeShopId = db.Column(db.Integer)
     coffeeShopName = db.Column(db.String(200))
-    deskripsi = db.Column(db.String(230))
+    deskripsi = db.Column(db.String(200))
     
 
     response_field = {

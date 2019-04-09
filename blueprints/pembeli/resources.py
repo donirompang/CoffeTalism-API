@@ -241,7 +241,7 @@ class GetHistory(Resource):
     @jwt_required
     def get(self):
         userId = get_jwt_claims()['id']
-        qry = History.query.filter_by(userId = userId).order_by(History.created.desc()).all()
+        qry = History.query.filter_by(userId = userId).order_by(History.created.desc()).distinct().all()
         list_cafe = []
         resp = {}
         if qry is not None:
@@ -646,9 +646,13 @@ class EditProfileUser(Resource):
         parser = reqparse.RequestParser()
         parser.add_argument('name', location='json', default=None)
         parser.add_argument('photo', location='json', default=None)
+
+        parser.add_argument('notif', location='json', default=None)
+
         parser.add_argument('password', location='json', default=None)
         parser.add_argument('k_password', location='json', default=None)
         parser.add_argument('notif', location='json', default=None)
+
 
         args = parser.parse_args()
         qry_user = Pembeli.query.filter_by(id=pembeli['id']).first()
@@ -671,6 +675,7 @@ class EditProfileUser(Resource):
 
             if args['password'] is not None:
                 qry_user.password = args['password']
+
 
             db.session.commit()
             resp = {}

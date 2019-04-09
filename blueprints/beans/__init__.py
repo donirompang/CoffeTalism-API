@@ -12,7 +12,7 @@ class Beans(db.Model):
     cafeShopName = db.Column(db.String(200))
     photoUrl = db.Column(db.String(200))
     notes = db.Column(db.String(200))
-    tipe = db.Column(db.String(200), default="Beans Lokal")
+    tipe = db.Column(db.String(200), default='Beans Lokal')
     
 
     response_field = {

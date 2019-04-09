@@ -32,7 +32,6 @@ class Pembeli(db.Model):
         "status" : fields.String,
         "pushToken" : fields.String,
         "notif" : fields.String
-
     }
 
     def __init__ (self, id, username, name, password, email, point, bagde, profilePicture, status, pushToken, notif):
