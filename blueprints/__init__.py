@@ -15,7 +15,7 @@ app = Flask(__name__)
 CORS(app)
 
 app.config['JWT_SECRET_KEY'] = 'aku'
-app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=1)
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(days=7)
 
 jwt = JWTManager(app)
 
@@ -24,8 +24,12 @@ def add_claims_to_access_token(identity):
     return identity
 
 
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://doni:doni@172.31.31.238:3306/livecode_api'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:very_strong_password@127.0.0.1:3306/livecode_api'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://coffeetalism:coffeetalism1@coffeetalism.cce9usu6udt3.ap-southeast-1.rds.amazonaws.com:3306/datakopi'
+
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:very_strong_password@127.0.0.1:3306/livecode_api'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:alphatech@127.0.0.1:3306/api_last'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@127.0.0.1:3306/livecode_api'
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:alphatech@127.0.0.1:3306/restlast'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db = SQLAlchemy(app)
@@ -39,14 +43,11 @@ db.create_all()
 
 api = Api(app, catch_all_404s=True)
 
-from blueprints.client.resources import bp_client
-app.register_blueprint(bp_client, url_prefix="/")
+from blueprints.penjual.resources import bp_penjual
+app.register_blueprint(bp_penjual, url_prefix="/penjual")
 
-from blueprints.pelapak.resources import bp_pelapak
-app.register_blueprint(bp_pelapak, url_prefix="/pelapak")
-
-from blueprints.admin.resources import bp_admin
-app.register_blueprint(bp_admin, url_prefix="/admin")
+from blueprints.pembeli.resources import bp_pembeli
+app.register_blueprint(bp_pembeli, url_prefix="/pembeli")
 
 from blueprints.auth import bp_auth
 app.register_blueprint(bp_auth, url_prefix="/auth")

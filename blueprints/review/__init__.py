@@ -12,6 +12,7 @@ class Review(db.Model):
     cafeUserName = db.Column(db.String(200))
     rating = db.Column(db.Integer)
     review = db.Column(db.String(200))
+    deleted = db.Column(db.String(100), default="tidak")
 
 
     response_field = {
@@ -21,10 +22,11 @@ class Review(db.Model):
         "cafeUserId" : fields.Integer,
         "cafeUserName" : fields.String,
         "rating" : fields.Integer,
-        "review" : fields.String
+        "review" : fields.String,
+        "deleted" : fields.String
     }
 
-    def __init__ (self, id, cafeShopId, cafeShopName, cafeUserId, cafeUserName, rating, review):
+    def __init__ (self, id, cafeShopId, cafeShopName, cafeUserId, cafeUserName, rating, review, deleted):
         self.id = id
         self.cafeShopId = cafeShopId
         self.cafeShopName = cafeShopName
@@ -32,6 +34,7 @@ class Review(db.Model):
         self.cafeUserName = cafeUserName
         self.rating = rating
         self.review = review
+        self.deleted = deleted
 
     def __repr__(self):
         return f'<Review {self.id}>'
