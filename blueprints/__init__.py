@@ -24,7 +24,9 @@ def add_claims_to_access_token(identity):
     return identity
 
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:very_strong_password@127.0.0.1:3306/livecode_api'
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://coffeetalism:coffeetalism1@coffeetalism.cce9usu6udt3.ap-southeast-1.rds.amazonaws.com:3306/datakopi'
+
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:very_strong_password@127.0.0.1:3306/livecode_api'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:alphatech@127.0.0.1:3306/api_last'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:@127.0.0.1:3306/livecode_api'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:alphatech@127.0.0.1:3306/restlast'

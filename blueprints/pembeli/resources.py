@@ -103,8 +103,8 @@ class CariCafeBeanTerdekat(Resource):
 
         for row in list_cafe_id:
             penjual = Penjual.query.get(row)
-            # lokasi = penjual.location.split('#')
-            lokasi = [12.656511, -122.232131]
+            lokasi = penjual.location.split('#')
+            # lokasi = [12.656511, -122.232131]
             lat_penjual = lokasi[0]
             lon_penjual = lokasi[1]
             tmp_dist = get_distance(args['latitude'], args['longitude'], lat_penjual, lon_penjual)
@@ -422,7 +422,8 @@ class AddReview(Resource):
                 qry_review = Review.query.filter_by(cafeShopId = args['cafeShopId']).all()
               
                 if len(qry_review) > 0:
-                    cafe.rating = (cafe.rating + int(args['rating'])) / 2
+                    cafe.rating = (cafe.rating * (len(qry_review) - 1) + int(args['rating'])) / len(qry_review)
+                    # cafe.rating = (cafe.rating + int(args['rating'])) / 2
                 else:
                     cafe.rating = cafe.rating + int(args['rating'])
                 db.session.commit()
@@ -812,6 +813,51 @@ class GetPopularBean(Resource):
 
         return listoutput[:3], 200, { 'Content-Type': 'application/json' }
 
+
+
+
+
+class CafeTerdekat(Resource):
+    def post(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('latitude', location='json', type=float, default=0)
+        parser.add_argument('longitude', location='json', type=float, default=0)
+
+        args = parser.parse_args()
+
+        list_cafe_terdekat = []
+
+        penjual = Penjual.query.filter_by().all()
+
+        resp = {}
+        resp['status'] = 404
+        resp['results'] = []
+        if penjual is not None:
+            for row in penjual:
+                lokasi = row.location
+                tmp_lokasi = lokasi.split("#")
+                lat_penjual = float(tmp_lokasi[0])
+                lon_penjual = float(tmp_lokasi[1])
+                tmp_dist = get_distance(args['latitude'], args['longitude'], lat_penjual, lon_penjual)
+                a = int(tmp_dist)
+                list_cafe_terdekat.append([marshal(row, Penjual.response_field), a])
+
+            for i in range(len(list_cafe_terdekat)):
+                for j in range(len(list_cafe_terdekat)):
+                    if(list_cafe_terdekat[i][1] < list_cafe_terdekat[j][1]):
+                        tmp = list_cafe_terdekat[i]
+                        list_cafe_terdekat[i] = list_cafe_terdekat[j]
+                        list_cafe_terdekat[j] = tmp
+            
+            resp['results'] = list_cafe_terdekat[:6]
+            resp['status'] = 200
+
+        return resp, 200, { 'Content-Type': 'application/json' }
+          
+
+
+
+api.add_resource(CafeTerdekat, "/api/cafe/terdekat")
 
 
 api.add_resource(GetPopularBean, "/api/bean/popular")
